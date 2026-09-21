@@ -153,7 +153,7 @@ const server = createServer(async (req, res) => {
     const asset = media.get(url.pathname);
     if (asset) return sendMedia(asset[0], asset[1], req, res);
     let file = files.get(url.pathname);
-    if (url.pathname === "/demo.js" && authMode === "github") file = "live.js";
+    if (url.pathname === "/live.js" && authMode === "demo") file = "demo.js";
     if (!file) { res.writeHead(404); return res.end("Not found"); }
     const content = await readFile(new URL(`../public/${file}`, import.meta.url));
     res.writeHead(200, {
