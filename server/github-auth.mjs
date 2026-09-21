@@ -63,13 +63,20 @@ export function createGithubAuth({ origin, callbackUrl, clientId, clientSecret, 
 
     if (request.method === "GET" && pathname === "/auth/github/callback") {
       const url = new URL(request.url);
-      if (url.searchParams.has("error")) return redirect("/qsb/rewards?auth=cancelled", { cookies: clearOAuth });
+      // Only a refusal is a cancellation. Everything else GitHub reports is a
+      // real failure and must say which one.
+      if (url.searchParams.has("error")) {
+        const code = url.searchParams.get("error");
+        console.error(`GitHub returned ${code}: ${url.searchParams.get("error_description") || "no description"}`);
+        const cancelled = code === "access_denied";
+        return redirect(`/qsb/rewards?auth=${cancelled ? "cancelled" : "failed"}${cancelled ? "" : `&why=${encodeURIComponent(code || "unknown")}`}`, { cookies: clearOAuth });
+      }
       const received = url.searchParams.get("state") || "";
       const expected = cookie(request, STATE_COOKIE) || "";
       const verifier = cookie(request, VERIFIER_COOKIE);
       if (!received || !expected || !verifier || received.length !== expected.length || !timingSafeEqual(Buffer.from(received), Buffer.from(expected))) {
         console.error(`GitHub callback rejected: state ${received ? "mismatch" : "missing"}, cookies ${expected ? "present" : "missing"}.`);
-        return redirect("/qsb/rewards?auth=failed", { cookies: clearOAuth });
+        return redirect(`/qsb/rewards?auth=failed&why=${expected ? "state" : "cookies"}`, { cookies: clearOAuth });
       }
       const code = url.searchParams.get("code");
       if (!code) return redirect("/qsb/rewards?auth=failed", { cookies: clearOAuth });
@@ -79,14 +86,14 @@ export function createGithubAuth({ origin, callbackUrl, clientId, clientSecret, 
           body: JSON.stringify({ client_id: clientId, client_secret: clientSecret, code, redirect_uri: callback.href, code_verifier: verifier }),
           signal: AbortSignal.timeout(10000),
         });
-        if (!tokenResponse.ok) throw new Error(`GitHub token exchange returned ${tokenResponse.status}`);
+        if (!tokenResponse.ok) throw Object.assign(new Error(`GitHub token exchange returned ${tokenResponse.status}`), { reason: `token_${tokenResponse.status}` });
         const tokenData = await tokenResponse.json();
-        if (typeof tokenData.access_token !== "string" || tokenData.error) throw new Error(`GitHub did not issue a token: ${tokenData.error || "no access_token"} ${tokenData.error_description || ""}`.trim());
+        if (typeof tokenData.access_token !== "string" || tokenData.error) throw Object.assign(new Error(`GitHub did not issue a token: ${tokenData.error || "no access_token"} ${tokenData.error_description || ""}`.trim()), { reason: tokenData.error || "no_token" });
         const userResponse = await fetchImpl("https://api.github.com/user", {
           headers: { Authorization: `Bearer ${tokenData.access_token}`, Accept: "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28", "User-Agent": "Yukon-QSB-Rewards" },
           signal: AbortSignal.timeout(10000),
         });
-        if (!userResponse.ok) throw new Error(`GitHub /user returned ${userResponse.status}`);
+        if (!userResponse.ok) throw Object.assign(new Error(`GitHub /user returned ${userResponse.status}`), { reason: `user_${userResponse.status}` });
         const user = await userResponse.json();
         if (!Number.isSafeInteger(user.id) || typeof user.login !== "string" || !/^[A-Za-z0-9-]{1,39}$/.test(user.login)) throw new Error("Invalid GitHub identity");
         const session = randomBytes(32).toString("base64url");
@@ -94,7 +101,7 @@ export function createGithubAuth({ origin, callbackUrl, clientId, clientSecret, 
         return redirect("/qsb/rewards?github=connected", { cookies: [...clearOAuth, issueSession(session)] });
       } catch (error) {
         console.error(`GitHub callback failed: ${error.message}`);
-        return redirect("/qsb/rewards?auth=failed", { cookies: clearOAuth });
+        return redirect(`/qsb/rewards?auth=failed&why=${encodeURIComponent(error.reason || "exchange")}`, { cookies: clearOAuth });
       }
     }
 

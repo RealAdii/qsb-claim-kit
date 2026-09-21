@@ -109,7 +109,9 @@ export async function mountClaim({ entry, client = httpClient(), headerSlot = do
       cancelled: `<p class="yr-error" role="status">GitHub sign-in was cancelled.</p>`,
       expired: `<p class="yr-error" role="status">Your session expired. Connect GitHub again to pick up where you left off.</p>`,
     };
-    const message = notices[authResult];
+    const why = params.get("why");
+    if (why) { params.delete("why"); history.replaceState(null, "", location.pathname + (params.size ? `?${params}` : "")); }
+    const message = notices[authResult] ? notices[authResult].replace("</p>", `${why ? ` <span class="yr-error-code">(${safe(why)})</span>` : ""}</p>`) : undefined;
     if (!message) { entry.replaceChildren(); entry.hidden = true; return; }
     entry.hidden = false;
     entry.innerHTML = `<div class="yr-state">${message}</div>`;
