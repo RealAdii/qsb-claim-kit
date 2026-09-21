@@ -13,14 +13,17 @@ import { randomBytes } from "node:crypto";
 import { spawn } from "node:child_process";
 
 const origin = new URL(process.env.APP_ORIGIN || "http://127.0.0.1:4318");
+// The app can sign users in on a different origin than the one running setup,
+// which is how the deployed site gets its credentials from this machine.
+const target = new URL(process.env.CALLBACK_ORIGIN || origin.href);
 const envPath = new URL("../.env", import.meta.url);
 const state = randomBytes(16).toString("hex");
 const suffix = randomBytes(3).toString("hex");
 const manifest = {
-  name: `Yukon QSB rewards ${suffix}`,
+  name: process.env.APP_NAME || `Yukon QSB rewards ${suffix}`,
   url: "https://www.yukon.org/qsb",
   redirect_url: new URL("/setup/callback", origin).href,
-  callback_urls: [new URL("/auth/github/callback", origin).href],
+  callback_urls: [new URL("/auth/github/callback", target).href],
   description: "Signs QSB solvers in so the rewards page can check their GitHub account against the finalized award list.",
   public: false,
   default_permissions: {},
@@ -37,6 +40,7 @@ async function writeEnv(clientId, clientSecret) {
   set("GITHUB_CLIENT_ID", clientId);
   set("GITHUB_CLIENT_SECRET", clientSecret);
   await writeFile(envPath, text, { mode: 0o600 });
+  if (process.env.CREDENTIALS_OUT) await writeFile(new URL(`../${process.env.CREDENTIALS_OUT}`, import.meta.url), JSON.stringify({ clientId, clientSecret }, null, 2), { mode: 0o600 });
 }
 
 const server = createServer(async (req, res) => {
@@ -59,7 +63,7 @@ const server = createServer(async (req, res) => {
       if (!app.client_id || !app.client_secret) throw new Error("GitHub returned no client credentials.");
       await writeEnv(app.client_id, app.client_secret);
       res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
-      res.end(page("GitHub app created", `<p><strong>${app.name}</strong> is ready and its client ID and secret are in <code>.env</code>. Manage it at <a href="${app.html_url}">${app.html_url}</a>.</p><p>Start the rewards page with <code>npm start</code>, then open <a href="${origin.href}qsb/rewards">${origin.href}qsb/rewards</a> and connect GitHub.</p>`));
+      res.end(page("GitHub app created", `<p><strong>${app.name}</strong> is ready and its client ID and secret are in <code>.env</code>. Manage it at <a href="${app.html_url}">${app.html_url}</a>.</p><p>The app signs people in at <a href="${target.href}qsb/rewards">${target.href}qsb/rewards</a>.</p>`));
       console.log(`\nCreated ${app.name}\n  client id: ${app.client_id}\n  settings:  ${app.html_url}\n  written to .env\n`);
       setTimeout(() => { server.close(); process.exit(0); }, 250);
     } catch (error) {
