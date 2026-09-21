@@ -1,0 +1,18 @@
+[
+  {
+    "login": "RealAdii",
+    "awardId": "qsb-first-place",
+    "awardType": "week1",
+    "awardLabel": "First place",
+    "awardAmount": 2500,
+    "finalized": true
+  },
+  {
+    "login": "octocat",
+    "awardId": "qsb-raffle-a",
+    "awardType": "weeks23-raffle",
+    "awardLabel": "Raffle",
+    "awardAmount": 1000,
+    "finalized": false
+  }
+]

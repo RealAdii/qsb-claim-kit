@@ -1,0 +1,17 @@
+{
+  "name": "qsb-claim-kit",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node --env-file-if-exists=.env server/preview.mjs",
+    "test": "node --test test/*.test.mjs",
+    "sync": "node server/sync-sheets.mjs"
+  },
+  "dependencies": {
+    "google-auth-library": "^10.0.0",
+    "pg": "^8.16.0"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
