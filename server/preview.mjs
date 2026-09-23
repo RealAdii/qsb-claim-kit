@@ -5,7 +5,7 @@ import { createReadStream } from "node:fs";
 const files = new Map([
   ["/", "index.html"], ["/index.html", "index.html"], ["/claim", "index.html"], ["/claim/", "index.html"],
   ["/claim/claim-component.css", "claim-component.css"], ["/claim/claim.js", "claim.js"], ["/claim/demo.js", "demo.js"], ["/claim/live.js", "live.js"],
-  ["/claim/leaderboard", "leaderboard.html"], ["/claim/leaderboard/", "leaderboard.html"], ["/claim/leaderboard.js", "leaderboard.js"],
+  ["/claim/leaderboard", "leaderboard.html"], ["/claim/leaderboard/", "leaderboard.html"], ["/claim/leaderboard.js", "leaderboard.js"], ["/claim/rewards-preview", "rewards-preview.html"], ["/claim/rewards-preview.css", "rewards-preview.css"],
 ]);
 const types = { html: "text/html; charset=utf-8", css: "text/css; charset=utf-8", js: "text/javascript; charset=utf-8" };
 // Hero media is served with byte ranges. Safari asks for bytes 0-1 first and

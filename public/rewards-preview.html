@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Reward section iterations</title>
+  <link rel="icon" href="/claim/media/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/claim/claim-component.css">
+  <link rel="stylesheet" href="/claim/rewards-preview.css">
+</head>
+<body class="rp-body">
+
+  <p class="rp-label">Iteration A · Ranked weight</p>
+  <section class="yr-prizes rp-a">
+    <div class="yr-prizes-inner">
+      <header class="yr-prizes-head">
+        <p class="yr-eyebrow">Reward distribution</p>
+        <h2>Where the $20,000 goes</h2>
+        <p class="yr-prizes-sub">Every place in both pools, and how the raffle is drawn.</p>
+      </header>
+      <div class="rp-a-grid">
+        <article class="rp-pool">
+          <header><span>Week 1</span><strong>$2,000</strong></header>
+          <ol class="rp-places">
+            <li class="is-first"><i>1</i><span>First place</span><b>$1,000</b></li>
+            <li><i>2</i><span>Second place</span><b>$600</b></li>
+            <li><i>3</i><span>Third place</span><b>$400</b></li>
+          </ol>
+        </article>
+        <article class="rp-pool">
+          <header><span>Weeks 2 and 3</span><strong>$18,000</strong></header>
+          <ol class="rp-places">
+            <li class="is-first"><i>1</i><span>First place</span><b>$6,000</b></li>
+            <li><i>2</i><span>Second place</span><b>$3,600</b></li>
+            <li><i>3</i><span>Third place</span><b>$2,400</b></li>
+          </ol>
+          <div class="rp-raffle">
+            <p class="rp-raffle-top"><span>Raffle</span><b>$6,000</b></p>
+            <p class="rp-raffle-note">Six draws of $1,000, open to every solver who improved the record by at least 3 percent.</p>
+          </div>
+        </article>
+      </div>
+      <p class="rp-foot">Week 1 results do not count toward the Weeks 2 and 3 ranking or the raffle.</p>
+    </div>
+  </section>
+
+  <p class="rp-label">Iteration B · Proportional</p>
+  <section class="yr-prizes rp-b">
+    <div class="yr-prizes-inner">
+      <header class="yr-prizes-head">
+        <p class="yr-eyebrow">Reward distribution</p>
+        <h2>Where the $20,000 goes</h2>
+        <p class="yr-prizes-sub">Bar width is each prize as a share of its pool.</p>
+      </header>
+      <div class="rp-b-grid">
+        <section class="rp-b-pool">
+          <h3><span>Week 1</span><strong>$2,000</strong></h3>
+          <ul>
+            <li><span>First place</span><div class="rp-bar"><i style="width:50%"></i></div><b>$1,000</b></li>
+            <li><span>Second place</span><div class="rp-bar"><i style="width:30%"></i></div><b>$600</b></li>
+            <li><span>Third place</span><div class="rp-bar"><i style="width:20%"></i></div><b>$400</b></li>
+          </ul>
+        </section>
+        <section class="rp-b-pool">
+          <h3><span>Weeks 2 and 3</span><strong>$18,000</strong></h3>
+          <ul>
+            <li><span>First place</span><div class="rp-bar"><i style="width:33.3%"></i></div><b>$6,000</b></li>
+            <li><span>Second place</span><div class="rp-bar"><i style="width:20%"></i></div><b>$3,600</b></li>
+            <li><span>Third place</span><div class="rp-bar"><i style="width:13.3%"></i></div><b>$2,400</b></li>
+            <li class="is-raffle"><span>Raffle</span><div class="rp-bar"><i style="width:33.3%"></i></div><b>$6,000</b></li>
+          </ul>
+          <p class="rp-foot">Six draws of $1,000, open to every solver at 3 percent improvement or better. Week 1 does not count toward this pool.</p>
+        </section>
+      </div>
+    </div>
+  </section>
+
+  <p class="rp-label">Iteration C · Prize tiles</p>
+  <section class="yr-prizes rp-c">
+    <video class="rp-c-bg" autoplay muted loop playsinline preload="auto" poster="/claim/media/card-loop.jpg" aria-hidden="true" tabindex="-1"><source src="/claim/media/card-loop.mp4" type="video/mp4"></video>
+    <div class="yr-prizes-inner">
+      <header class="yr-prizes-head">
+        <p class="yr-eyebrow">Reward distribution</p>
+        <h2>Where the $20,000 goes</h2>
+      </header>
+      <p class="rp-c-pool">Week 1 · <b>$2,000</b></p>
+      <div class="rp-tiles">
+        <article class="rp-tile is-gold"><p class="rp-tile-place">First</p><p class="rp-tile-amount">$1,000</p></article>
+        <article class="rp-tile"><p class="rp-tile-place">Second</p><p class="rp-tile-amount">$600</p></article>
+        <article class="rp-tile"><p class="rp-tile-place">Third</p><p class="rp-tile-amount">$400</p></article>
+      </div>
+      <p class="rp-c-pool">Weeks 2 and 3 · <b>$18,000</b></p>
+      <div class="rp-tiles rp-tiles-4">
+        <article class="rp-tile is-gold"><p class="rp-tile-place">First</p><p class="rp-tile-amount">$6,000</p></article>
+        <article class="rp-tile"><p class="rp-tile-place">Second</p><p class="rp-tile-amount">$3,600</p></article>
+        <article class="rp-tile"><p class="rp-tile-place">Third</p><p class="rp-tile-amount">$2,400</p></article>
+        <article class="rp-tile is-raffle"><p class="rp-tile-place">Raffle</p><p class="rp-tile-amount">$6,000</p><p class="rp-tile-note">6 × $1,000</p></article>
+      </div>
+      <p class="rp-foot">Raffle draws are open to every solver who improved the record by at least 3 percent. Week 1 results do not count toward the Weeks 2 and 3 ranking or the raffle.</p>
+    </div>
+  </section>
+
+</body>
+</html>
