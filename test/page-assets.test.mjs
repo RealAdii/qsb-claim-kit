@@ -14,7 +14,7 @@ for await (const chunk of server.stdout) {
 }
 test.after(async () => { server.kill(); await once(server, "exit"); });
 
-const pageRoutes = ["/", "/qsb/rewards", "/qsb/rewards/leaderboard"];
+const pageRoutes = ["/", "/claim", "/claim/leaderboard"];
 for (const route of pageRoutes) {
   test(`assets referenced by ${route} all resolve`, async () => {
     const page = await fetch(new URL(route, base));
@@ -32,7 +32,7 @@ for (const route of pageRoutes) {
 }
 
 test("the hero video is served with byte ranges", async () => {
-  const response = await fetch(new URL("/media/hero.mp4", base), { headers: { Range: "bytes=0-1" } });
+  const response = await fetch(new URL("/claim/media/hero.mp4", base), { headers: { Range: "bytes=0-1" } });
   assert.equal(response.status, 206);
   assert.match(response.headers.get("content-range") || "", /^bytes 0-1\/\d+$/);
   assert.equal(response.headers.get("content-type"), "video/mp4");

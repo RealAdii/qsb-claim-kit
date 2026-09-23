@@ -6,23 +6,43 @@
       "destination": "/index.html"
     },
     {
-      "source": "/qsb/rewards",
+      "source": "/claim",
       "destination": "/index.html"
     },
     {
-      "source": "/qsb/rewards/leaderboard",
+      "source": "/claim/leaderboard",
       "destination": "/leaderboard.html"
     },
     {
-      "source": "/auth/(.*)",
+      "source": "/claim/claim-component.css",
+      "destination": "/claim-component.css"
+    },
+    {
+      "source": "/claim/claim.js",
+      "destination": "/claim.js"
+    },
+    {
+      "source": "/claim/live.js",
+      "destination": "/live.js"
+    },
+    {
+      "source": "/claim/leaderboard.js",
+      "destination": "/leaderboard.js"
+    },
+    {
+      "source": "/claim/media/:file*",
+      "destination": "/media/:file*"
+    },
+    {
+      "source": "/claim/auth/(.*)",
       "destination": "/api/index"
     },
     {
-      "source": "/api/yukon/reward-claim",
+      "source": "/claim/api/yukon/reward-claim",
       "destination": "/api/index"
     },
     {
-      "source": "/api/qsb/leaderboard",
+      "source": "/claim/api/qsb/leaderboard",
       "destination": "/api/index"
     }
   ],

@@ -29,7 +29,7 @@ export function createGithubAuth({ origin, callbackUrl, clientId, clientSecret, 
   if (!origin || !callbackUrl || !clientId || !clientSecret || !store) throw new Error("GitHub OAuth configuration is incomplete.");
   const base = new URL(origin);
   const callback = new URL(callbackUrl);
-  if (callback.origin !== base.origin || callback.pathname !== "/auth/github/callback") throw new Error("GitHub callback must be /auth/github/callback on APP_ORIGIN.");
+  if (callback.origin !== base.origin || callback.pathname !== "/claim/auth/github/callback") throw new Error("GitHub callback must be /claim/auth/github/callback on APP_ORIGIN.");
   const secure = base.protocol === "https:" ? "; Secure" : "";
   const clearOAuth = [`${STATE_COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${secure}`, `${VERIFIER_COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${secure}`];
   const issueSession = (token) => `${SESSION_COOKIE}=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=604800${secure}`;
@@ -46,7 +46,7 @@ export function createGithubAuth({ origin, callbackUrl, clientId, clientSecret, 
   }
 
   async function handle(request, pathname) {
-    if (request.method === "GET" && pathname === "/auth/github") {
+    if (request.method === "GET" && pathname === "/claim/auth/github") {
       const state = randomBytes(32).toString("base64url");
       const verifier = randomBytes(32).toString("base64url");
       const challenge = createHash("sha256").update(verifier).digest("base64url");
@@ -61,7 +61,7 @@ export function createGithubAuth({ origin, callbackUrl, clientId, clientSecret, 
       return response;
     }
 
-    if (request.method === "GET" && pathname === "/auth/github/callback") {
+    if (request.method === "GET" && pathname === "/claim/auth/github/callback") {
       const url = new URL(request.url);
       // Only a refusal is a cancellation. Everything else GitHub reports is a
       // real failure and must say which one.
@@ -69,17 +69,17 @@ export function createGithubAuth({ origin, callbackUrl, clientId, clientSecret, 
         const code = url.searchParams.get("error");
         console.error(`GitHub returned ${code}: ${url.searchParams.get("error_description") || "no description"}`);
         const cancelled = code === "access_denied";
-        return redirect(`/qsb/rewards?auth=${cancelled ? "cancelled" : "failed"}${cancelled ? "" : `&why=${encodeURIComponent(code || "unknown")}`}`, { cookies: clearOAuth });
+        return redirect(`/claim?auth=${cancelled ? "cancelled" : "failed"}${cancelled ? "" : `&why=${encodeURIComponent(code || "unknown")}`}`, { cookies: clearOAuth });
       }
       const received = url.searchParams.get("state") || "";
       const expected = cookie(request, STATE_COOKIE) || "";
       const verifier = cookie(request, VERIFIER_COOKIE);
       if (!received || !expected || !verifier || received.length !== expected.length || !timingSafeEqual(Buffer.from(received), Buffer.from(expected))) {
         console.error(`GitHub callback rejected: state ${received ? "mismatch" : "missing"}, cookies ${expected ? "present" : "missing"}.`);
-        return redirect(`/qsb/rewards?auth=failed&why=${expected ? "state" : "cookies"}`, { cookies: clearOAuth });
+        return redirect(`/claim?auth=failed&why=${expected ? "state" : "cookies"}`, { cookies: clearOAuth });
       }
       const code = url.searchParams.get("code");
-      if (!code) return redirect("/qsb/rewards?auth=failed", { cookies: clearOAuth });
+      if (!code) return redirect("/claim?auth=failed", { cookies: clearOAuth });
       try {
         const tokenResponse = await fetchImpl("https://github.com/login/oauth/access_token", {
           method: "POST", headers: { Accept: "application/json", "Content-Type": "application/json" },
@@ -98,14 +98,14 @@ export function createGithubAuth({ origin, callbackUrl, clientId, clientSecret, 
         if (!Number.isSafeInteger(user.id) || typeof user.login !== "string" || !/^[A-Za-z0-9-]{1,39}$/.test(user.login)) throw new Error("Invalid GitHub identity");
         const session = randomBytes(32).toString("base64url");
         await store.create(hash(session), user, new Date(now() + 7 * 24 * 60 * 60 * 1000).toISOString());
-        return redirect("/qsb/rewards?github=connected", { cookies: [...clearOAuth, issueSession(session)] });
+        return redirect("/claim?github=connected", { cookies: [...clearOAuth, issueSession(session)] });
       } catch (error) {
         console.error(`GitHub callback failed: ${error.message}`);
-        return redirect(`/qsb/rewards?auth=failed&why=${encodeURIComponent(error.reason || "exchange")}`, { cookies: clearOAuth });
+        return redirect(`/claim?auth=failed&why=${encodeURIComponent(error.reason || "exchange")}`, { cookies: clearOAuth });
       }
     }
 
-    if (request.method === "POST" && pathname === "/auth/logout") {
+    if (request.method === "POST" && pathname === "/claim/auth/logout") {
       if (request.headers.get("origin") !== base.origin) return json(403, { error: "Invalid request origin." });
       const token = cookie(request, SESSION_COOKIE);
       if (token) await store.delete(hash(token));

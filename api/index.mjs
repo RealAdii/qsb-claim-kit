@@ -12,7 +12,7 @@ if (missing.length) throw new Error(`Missing environment variables: ${missing.jo
 
 const origin = new URL(process.env.APP_ORIGIN).origin;
 const callback = new URL(process.env.GITHUB_CALLBACK_URL);
-if (callback.origin !== origin || callback.pathname !== "/auth/github/callback") throw new Error("GITHUB_CALLBACK_URL must be /auth/github/callback on APP_ORIGIN.");
+if (callback.origin !== origin || callback.pathname !== "/claim/auth/github/callback") throw new Error("GITHUB_CALLBACK_URL must be /claim/auth/github/callback on APP_ORIGIN.");
 
 // One pool per warm instance, small because many instances may exist at once.
 const pool = globalThis.__qsbPool ?? (globalThis.__qsbPool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 3, idleTimeoutMillis: 10000 }));
@@ -60,13 +60,13 @@ function send(webResponse, res) {
 export default async function handler(req, res) {
   const url = new URL(req.url, origin);
   try {
-    if (url.pathname.startsWith("/auth/")) {
+    if (url.pathname.startsWith("/claim/auth/")) {
       const response = await githubAuth.handle(await toRequest(req), url.pathname);
       if (response) return send(response, res);
       res.statusCode = 404; return res.end("Not found");
     }
-    if (url.pathname === "/api/yukon/reward-claim") return send(await claimHandler(await toRequest(req)), res);
-    if (url.pathname === "/api/qsb/leaderboard") {
+    if (url.pathname === "/claim/api/yukon/reward-claim") return send(await claimHandler(await toRequest(req)), res);
+    if (url.pathname === "/claim/api/qsb/leaderboard") {
       const [board, awarded] = await Promise.all([leaderboard.get(), prizes()]);
       const solvers = board.solvers.map((solver) => ({ ...solver, prize: solver.avatarId ? awarded.get(solver.avatarId) ?? null : null }));
       res.writeHead(200, { "Content-Type": "application/json", "Cache-Control": "no-store" });

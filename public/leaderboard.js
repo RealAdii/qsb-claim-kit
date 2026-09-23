@@ -38,7 +38,7 @@ function row(solver, index) {
 }
 
 try {
-  const response = await fetch("/api/qsb/leaderboard");
+  const response = await fetch("/claim/api/qsb/leaderboard");
   if (!response.ok) throw new Error("unavailable");
   const board = await response.json();
   const top = board.solvers.slice(0, 3);

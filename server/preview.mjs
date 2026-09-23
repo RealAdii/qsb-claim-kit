@@ -3,14 +3,14 @@ import { readFile, stat } from "node:fs/promises";
 import { createReadStream } from "node:fs";
 
 const files = new Map([
-  ["/", "index.html"], ["/index.html", "index.html"], ["/qsb/rewards", "index.html"], ["/qsb/rewards/", "index.html"],
-  ["/claim-component.css", "claim-component.css"], ["/claim.js", "claim.js"], ["/demo.js", "demo.js"], ["/live.js", "live.js"],
-  ["/qsb/rewards/leaderboard", "leaderboard.html"], ["/qsb/rewards/leaderboard/", "leaderboard.html"], ["/leaderboard.js", "leaderboard.js"],
+  ["/", "index.html"], ["/index.html", "index.html"], ["/claim", "index.html"], ["/claim/", "index.html"],
+  ["/claim/claim-component.css", "claim-component.css"], ["/claim/claim.js", "claim.js"], ["/claim/demo.js", "demo.js"], ["/claim/live.js", "live.js"],
+  ["/claim/leaderboard", "leaderboard.html"], ["/claim/leaderboard/", "leaderboard.html"], ["/claim/leaderboard.js", "leaderboard.js"],
 ]);
 const types = { html: "text/html; charset=utf-8", css: "text/css; charset=utf-8", js: "text/javascript; charset=utf-8" };
 // Hero media is served with byte ranges. Safari asks for bytes 0-1 first and
 // refuses to play a video from a server that answers 200 with the whole file.
-const media = new Map([["/media/hero.mp4", ["hero.mp4", "video/mp4"]], ["/media/hero-poster.jpg", ["hero-poster.jpg", "image/jpeg"]], ["/media/card-loop.mp4", ["card-loop.mp4", "video/mp4"]], ["/media/card-loop.jpg", ["card-loop.jpg", "image/jpeg"]], ["/media/podium-bg.mp4", ["podium-bg.mp4", "video/mp4"]], ["/media/podium-bg.jpg", ["podium-bg.jpg", "image/jpeg"]], ["/media/board-bg.mp4", ["board-bg.mp4", "video/mp4"]], ["/media/board-bg.jpg", ["board-bg.jpg", "image/jpeg"]], ["/media/favicon.svg", ["favicon.svg", "image/svg+xml"]], ["/media/starkware-logo.svg", ["starkware-logo.svg", "image/svg+xml"]], ["/media/starkware-logo-white.svg", ["starkware-logo-white.svg", "image/svg+xml"]]]);
+const media = new Map([["/claim/media/hero.mp4", ["hero.mp4", "video/mp4"]], ["/claim/media/hero-poster.jpg", ["hero-poster.jpg", "image/jpeg"]], ["/claim/media/card-loop.mp4", ["card-loop.mp4", "video/mp4"]], ["/claim/media/card-loop.jpg", ["card-loop.jpg", "image/jpeg"]], ["/claim/media/podium-bg.mp4", ["podium-bg.mp4", "video/mp4"]], ["/claim/media/podium-bg.jpg", ["podium-bg.jpg", "image/jpeg"]], ["/claim/media/board-bg.mp4", ["board-bg.mp4", "video/mp4"]], ["/claim/media/board-bg.jpg", ["board-bg.jpg", "image/jpeg"]], ["/claim/media/favicon.svg", ["favicon.svg", "image/svg+xml"]], ["/claim/media/starkware-logo.svg", ["starkware-logo.svg", "image/svg+xml"]], ["/claim/media/starkware-logo-white.svg", ["starkware-logo-white.svg", "image/svg+xml"]]]);
 async function sendMedia(name, type, req, res) {
   const path = new URL(`../public/media/${name}`, import.meta.url);
   const { size } = await stat(path);
@@ -114,18 +114,18 @@ const server = createServer(async (req, res) => {
   try {
     if (authMode === "github") {
       const request = await nodeRequest(req, origin);
-      if (url.pathname.startsWith("/auth/")) {
+      if (url.pathname.startsWith("/claim/auth/")) {
         const response = await githubAuth.handle(request, url.pathname);
         if (response) return sendWebResponse(response, res);
       }
-      if (url.pathname === "/api/yukon/reward-claim") return sendWebResponse(await claimHandler(request), res);
+      if (url.pathname === "/claim/api/yukon/reward-claim") return sendWebResponse(await claimHandler(request), res);
       // Dev inspection of collected payout details. Only exists with STORE=memory.
-      if (url.pathname === "/dev/claims" && devClaims) {
+      if (url.pathname === "/claim/dev/claims" && devClaims) {
         res.writeHead(200, { "Content-Type": "application/json", "Cache-Control": "no-store" });
         return res.end(JSON.stringify(devClaims.list(), null, 2));
       }
     }
-    if (url.pathname === "/api/qsb/leaderboard") {
+    if (url.pathname === "/claim/api/qsb/leaderboard") {
       try {
         if (roster) {
           const awarded = await prizes();
@@ -153,7 +153,7 @@ const server = createServer(async (req, res) => {
     const asset = media.get(url.pathname);
     if (asset) return sendMedia(asset[0], asset[1], req, res);
     let file = files.get(url.pathname);
-    if (url.pathname === "/live.js" && authMode === "demo") file = "demo.js";
+    if (url.pathname === "/claim/live.js" && authMode === "demo") file = "demo.js";
     if (!file) { res.writeHead(404); return res.end("Not found"); }
     const content = await readFile(new URL(`../public/${file}`, import.meta.url));
     res.writeHead(200, {

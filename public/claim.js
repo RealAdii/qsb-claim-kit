@@ -2,7 +2,7 @@ const githubMark = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="tr
 const avatar = (id) => `https://avatars.githubusercontent.com/u/${encodeURIComponent(id)}?v=4&s=120`;
 const safe = (value) => String(value ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 
-export function httpClient(endpoint = "/api/yukon/reward-claim", loginUrl = "/auth/github?returnTo=%2Fqsb%2Frewards%3Fgithub%3Dconnected") {
+export function httpClient(endpoint = "/claim/api/yukon/reward-claim", loginUrl = "/claim/auth/github") {
   async function request(method, data) {
     const response = await fetch(endpoint, { method, credentials: "same-origin", headers: data ? { "Content-Type": "application/json" } : {}, body: data ? JSON.stringify(data) : undefined });
     const result = await response.json();
@@ -14,8 +14,8 @@ export function httpClient(endpoint = "/api/yukon/reward-claim", loginUrl = "/au
     return result;
   }
   async function signOut() {
-    try { await fetch("/auth/logout", { method: "POST", credentials: "same-origin" }); } catch { /* sign in again regardless */ }
-    window.location.assign("/auth/github");
+    try { await fetch("/claim/auth/logout", { method: "POST", credentials: "same-origin" }); } catch { /* sign in again regardless */ }
+    window.location.assign("/claim/auth/github");
   }
   return { status: () => request("GET"), save: (data) => request("POST", data), connect: () => { window.location.assign(loginUrl); }, signOut };
 }
@@ -24,7 +24,7 @@ const money = (amount) => `$${Number(amount).toLocaleString("en-US", { maximumFr
 // Collectible winner card: foil edge, halftone portrait, nameplate. Every
 // winner reads "WINNER" regardless of which award they hold.
 const winnerCard = (user) => `<div class="yr-card" id="yr-card"><div class="yr-card-foil"><div class="yr-card-face">
-    <video class="yr-card-loop" autoplay muted loop playsinline preload="auto" poster="/media/card-loop.jpg" aria-hidden="true" tabindex="-1"><source src="/media/card-loop.mp4" type="video/mp4"></video>
+    <video class="yr-card-loop" autoplay muted loop playsinline preload="auto" poster="/claim/media/card-loop.jpg" aria-hidden="true" tabindex="-1"><source src="/claim/media/card-loop.mp4" type="video/mp4"></video>
     <div class="yr-card-top"><span>YUKON</span><span class="yr-card-top-sep" aria-hidden="true"></span><span>QSB</span></div>
     <div class="yr-card-portrait"><img src="${avatar(user.id)}" alt="" width="240" height="240"><span class="yr-card-dots" aria-hidden="true"></span></div>
     <div class="yr-card-plate"><strong>@${safe(user.login)}</strong><span>WINNER</span></div>
