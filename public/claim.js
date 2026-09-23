@@ -191,6 +191,9 @@ export async function mountClaim({ entry, client = httpClient(), headerSlot = do
     if (justConnected) history.replaceState(null, "", location.pathname);
     if (!disposed) renderState(justConnected);
   }
-  catch { entry.textContent = "Reward status is unavailable. Please refresh to try again."; }
+  catch (error) {
+    console.error("Yukon QSB rewards: could not render the claim card.", error);
+    entry.textContent = "Reward status is unavailable. Please refresh to try again.";
+  }
   return { destroy() { disposed = true; entry.replaceChildren(); headerSlot?.replaceChildren(); document.querySelectorAll(".yr-confetti").forEach((item) => item.remove()); } };
 }

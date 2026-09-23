@@ -3,7 +3,7 @@ import { mountClaim } from "../public/claim.js";
 import "../public/claim-component.css";
 
 /** Render the reward claim trigger only when the verified Yukon session owns an award. */
-export default function QsbClaim({ endpoint = "/api/yukon/reward-claim", loginUrl = "/auth/github?returnTo=%2Fqsb%2Frewards%3Fgithub%3Dconnected", sessionVersion }) {
+export default function QsbClaim({ endpoint = "/claim/api/yukon/reward-claim", loginUrl = "/claim/auth/github", sessionVersion }) {
   const entry = useRef(null);
   useEffect(() => {
     const controller = new AbortController();

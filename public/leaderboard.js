@@ -1,4 +1,4 @@
-import { mountAccount } from "./claim.js";
+import { mountAccount } from "./claim.js?v=2";
 
 const safe = (value) => String(value ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 const avatarUrl = (id, size) => `https://avatars.githubusercontent.com/u/${encodeURIComponent(id)}?v=4&s=${size}`;

@@ -1,6 +1,6 @@
-import { mountClaim, httpClient } from "./claim.js";
+import { mountClaim, httpClient } from "./claim.js?v=2";
 
 await mountClaim({
   entry: document.querySelector("#claim-entry"),
-  client: httpClient("/api/yukon/reward-claim", "/auth/github"),
+  client: httpClient(),
 });

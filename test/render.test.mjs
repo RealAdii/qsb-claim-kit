@@ -53,3 +53,13 @@ test("the other states render without throwing", async () => {
     assert.equal(entry.html.includes("Reward status is unavailable"), false, `${name} view failed to render`);
   }
 });
+
+test("the shipped client talks to the /claim endpoints", async () => {
+  const { httpClient } = await import("../public/claim.js");
+  const calls = [];
+  globalThis.fetch = async (url) => { calls.push(String(url)); return { ok: true, status: 200, json: async () => ({ user: null }) }; };
+  await httpClient().status();
+  assert.deepEqual(calls, ["/claim/api/yukon/reward-claim"]);
+  const live = await import("node:fs/promises").then((fs) => fs.readFile(new URL("../public/live.js", import.meta.url), "utf8"));
+  assert.equal(/httpClient\((["'])\/(?!claim)/.test(live), false, "live.js must not point at a root path");
+});
