@@ -5,12 +5,12 @@ import { createReadStream } from "node:fs";
 const files = new Map([
   ["/", "index.html"], ["/index.html", "index.html"], ["/claim", "index.html"], ["/claim/", "index.html"],
   ["/claim/claim-component.css", "claim-component.css"], ["/claim/claim.js", "claim.js"], ["/claim/demo.js", "demo.js"], ["/claim/live.js", "live.js"],
-  ["/claim/leaderboard", "leaderboard.html"], ["/claim/leaderboard/", "leaderboard.html"], ["/claim/leaderboard.js", "leaderboard.js"], ["/claim/rewards-preview", "rewards-preview.html"], ["/claim/rewards-preview.css", "rewards-preview.css"],
+  ["/claim/leaderboard", "leaderboard.html"], ["/claim/leaderboard/", "leaderboard.html"], ["/claim/leaderboard.js", "leaderboard.js"],
 ]);
 const types = { html: "text/html; charset=utf-8", css: "text/css; charset=utf-8", js: "text/javascript; charset=utf-8" };
 // Hero media is served with byte ranges. Safari asks for bytes 0-1 first and
 // refuses to play a video from a server that answers 200 with the whole file.
-const media = new Map([["/claim/media/hero.mp4", ["hero.mp4", "video/mp4"]], ["/claim/media/hero-poster.jpg", ["hero-poster.jpg", "image/jpeg"]], ["/claim/media/card-loop.mp4", ["card-loop.mp4", "video/mp4"]], ["/claim/media/card-loop.jpg", ["card-loop.jpg", "image/jpeg"]], ["/claim/media/podium-bg.mp4", ["podium-bg.mp4", "video/mp4"]], ["/claim/media/podium-bg.jpg", ["podium-bg.jpg", "image/jpeg"]], ["/claim/media/board-bg.mp4", ["board-bg.mp4", "video/mp4"]], ["/claim/media/board-bg.jpg", ["board-bg.jpg", "image/jpeg"]], ["/claim/media/favicon.svg", ["favicon.svg", "image/svg+xml"]], ["/claim/media/starkware-logo.svg", ["starkware-logo.svg", "image/svg+xml"]], ["/claim/media/starkware-logo-white.svg", ["starkware-logo-white.svg", "image/svg+xml"]]]);
+const media = new Map([["/claim/media/hero.mp4", ["hero.mp4", "video/mp4"]], ["/claim/media/hero-poster.jpg", ["hero-poster.jpg", "image/jpeg"]], ["/claim/media/card-loop.mp4", ["card-loop.mp4", "video/mp4"]], ["/claim/media/card-loop.jpg", ["card-loop.jpg", "image/jpeg"]], ["/claim/media/rewards-bg.mp4", ["rewards-bg.mp4", "video/mp4"]], ["/claim/media/rewards-bg.jpg", ["rewards-bg.jpg", "image/jpeg"]], ["/claim/media/podium-bg.mp4", ["podium-bg.mp4", "video/mp4"]], ["/claim/media/podium-bg.jpg", ["podium-bg.jpg", "image/jpeg"]], ["/claim/media/board-bg.mp4", ["board-bg.mp4", "video/mp4"]], ["/claim/media/board-bg.jpg", ["board-bg.jpg", "image/jpeg"]], ["/claim/media/favicon.svg", ["favicon.svg", "image/svg+xml"]], ["/claim/media/starkware-logo.svg", ["starkware-logo.svg", "image/svg+xml"]], ["/claim/media/starkware-logo-white.svg", ["starkware-logo-white.svg", "image/svg+xml"]]]);
 async function sendMedia(name, type, req, res) {
   const path = new URL(`../public/media/${name}`, import.meta.url);
   const { size } = await stat(path);

@@ -14,14 +14,6 @@
       "destination": "/leaderboard.html"
     },
     {
-      "source": "/claim/rewards-preview.css",
-      "destination": "/rewards-preview.css"
-    },
-    {
-      "source": "/claim/rewards-preview",
-      "destination": "/rewards-preview.html"
-    },
-    {
       "source": "/claim/claim-component.css",
       "destination": "/claim-component.css"
     },
