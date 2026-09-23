@@ -124,7 +124,7 @@ export async function mountClaim({ entry, client = httpClient(), headerSlot = do
     const login = state?.user?.login;
     const who = login ? `<p class="yr-fineprint">Filed for @${safe(login)}.</p>` : "";
     const mark = state?.user?.id ? `<img class="yr-avatar" src="${avatar(state.user.id)}" alt="" width="68" height="68">` : `<span class="yr-state-icon" aria-hidden="true">✓</span>`;
-    entry.innerHTML = `<div class="yr-state" role="status">${mark}<div><h2>Details received</h2><p>Your reward details are on file. The Yukon team will contact you using the email or Telegram address you submitted. Make sure you have a KoshMoney account before payout.</p>${who}</div></div>`;
+    entry.innerHTML = `<div class="yr-state" role="status">${mark}<div><h2>Details received</h2><p>Your reward details are on file. The StarkWare team will contact you using the email or Telegram address you submitted. Make sure you have a KoshMoney account before payout.</p>${who}</div></div>`;
   }
   function wireCardTilt() {
     const card = entry.querySelector("#yr-card");
