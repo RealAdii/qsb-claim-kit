@@ -8,13 +8,13 @@ const spreadsheet = process.env.GOOGLE_SHEET_ID;
 if (!spreadsheet) throw new Error("Set GOOGLE_SHEET_ID.");
 const sheetName = process.env.GOOGLE_SHEET_TAB || "Reward claims";
 const tab = "'" + sheetName.replaceAll("'", "''") + "'";
-const headers = ["GitHub ID", "GitHub username", "Award ID", "Award category", "Award label", "Award amount USD", "Kosh account email", "Email", "Telegram", "Details confirmed by claimant", "Claimed at", "Updated at"];
+const headers = ["GitHub ID", "GitHub username", "Award ID", "Award category", "Award label", "Award amount USD", "Email", "Telegram", "Details confirmed by claimant", "Claimed at", "Updated at"];
 async function write(range, values) {
   const client = await auth.getClient();
   await client.request({ url: `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(spreadsheet)}/values/${encodeURIComponent(range)}?valueInputOption=RAW`, method: "PUT", data: { values }, timeout: 15000 });
 }
 try {
-  await write(`${tab}!A1:L1`, [headers]);
+  await write(`${tab}!A1:K1`, [headers]);
   for (let i = 0; i < 100; i++) {
     const client = await pool.connect();
     try {
@@ -24,7 +24,7 @@ try {
       if (!row) { await client.query("COMMIT"); break; }
       try {
         const r = unseal(row.encrypted_details, `${row.github_id}:${row.award_id}`);
-        await write(`${tab}!A${row.sheet_row}:L${row.sheet_row}`, [[r.githubId, r.githubLogin, r.awardId, r.awardType, r.awardLabel, r.awardAmount, r.koshEmail, r.email, r.telegram, r.detailsConfirmed ? "Yes" : "No", new Date(row.created_at).toISOString(), r.updatedAt]]);
+        await write(`${tab}!A${row.sheet_row}:K${row.sheet_row}`, [[r.githubId, r.githubLogin, r.awardId, r.awardType, r.awardLabel, r.awardAmount, r.email, r.telegram, r.detailsConfirmed ? "Yes" : "No", new Date(row.created_at).toISOString(), r.updatedAt]]);
         await client.query("UPDATE yukon_qsb_reward_claims SET synced_revision=revision WHERE github_id=$1 AND award_id=$2", [row.github_id, row.award_id]);
       } catch {
         await client.query("UPDATE yukon_qsb_reward_claims SET retry_after=now()+interval '5 minutes' WHERE github_id=$1 AND award_id=$2", [row.github_id, row.award_id]);

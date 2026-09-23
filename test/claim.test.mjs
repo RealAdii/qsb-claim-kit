@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createClaimHandler, validate } from "../server/claim-handler.mjs";
 import { seal, unseal } from "../server/crypto.mjs";
-const valid = { koshEmail: "solver@kosh.example", email: "solver@example.com", telegram: "@solver_name", detailsConfirmed: true };
+const valid = { email: "solver@example.com", telegram: "@solver_name", detailsConfirmed: true };
 const award = { awardId: "weeks23-second", type: "weeks23", label: "Weeks 2 to 3 · 2nd place", amount: 3600 };
 function setup({ session = { githubId: 42, login: "solver" }, winningAward = award } = {}) {
   const records = new Map();
@@ -40,10 +40,7 @@ test("award details stay hidden from anyone without a finalized award", async ()
     assert.equal("award" in status, false);
   }
 });
-test("requires a Kosh email, a contact email, a Telegram username and the confirmation", () => {
-  assert.throws(() => validate({ ...valid, koshEmail: "not-email" }));
-  assert.throws(() => validate({ ...valid, koshEmail: undefined }));
-  assert.throws(() => validate({ ...valid, koshEmail: "" }));
+test("requires an email, a Telegram username and the confirmation", () => {
   assert.throws(() => validate({ ...valid, email: "not-email" }));
   assert.throws(() => validate({ ...valid, email: undefined }));
   assert.throws(() => validate({ ...valid, email: "" }));
@@ -51,7 +48,7 @@ test("requires a Kosh email, a contact email, a Telegram username and the confir
   assert.throws(() => validate({ ...valid, telegram: undefined }));
   assert.throws(() => validate({ ...valid, detailsConfirmed: false }));
   assert.equal(validate({ ...valid, telegram: "solver_name" }).telegram, "@solver_name");
-  assert.equal(validate({ ...valid, koshEmail: "Solver@Kosh.example" }).koshEmail, "solver@kosh.example");
+  assert.equal(validate({ ...valid, email: "Solver@Example.com" }).email, "solver@example.com");
 });
 test("caps request size", async () => {
   assert.equal((await setup().handler(request({ ...valid, telegram: "x".repeat(9000) }))).status, 413);

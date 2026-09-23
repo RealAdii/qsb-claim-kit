@@ -124,7 +124,7 @@ export async function mountClaim({ entry, client = httpClient(), headerSlot = do
     const login = state?.user?.login;
     const who = login ? `<p class="yr-fineprint">Filed for @${safe(login)}.</p>` : "";
     const mark = state?.user?.id ? `<img class="yr-avatar" src="${avatar(state.user.id)}" alt="" width="68" height="68">` : `<span class="yr-state-icon" aria-hidden="true">✓</span>`;
-    entry.innerHTML = `<div class="yr-state" role="status">${mark}<div><h2>Details received</h2><p>Your reward details are on file. The StarkWare team will contact you using the email or Telegram address you submitted. Make sure you have a KoshMoney account before payout.</p>${who}</div></div>`;
+    entry.innerHTML = `<div class="yr-state" role="status">${mark}<div><h2>Details received</h2><p>The team will be in touch with you soon about the next steps on receiving the reward.</p>${who}</div></div>`;
   }
   function wireCardTilt() {
     const card = entry.querySelector("#yr-card");
@@ -157,7 +157,7 @@ export async function mountClaim({ entry, client = httpClient(), headerSlot = do
       <div class="yr-claim-right">
         <p class="yr-winner-kicker">You're on the winners list</p>
         ${amount}
-        <form id="yr-form"><div class="yr-fields"><label class="full"><span class="yr-field-label">Kosh account email</span><input name="koshEmail" type="email" autocomplete="off" required maxlength="254" spellcheck="false" placeholder="you@example.com"><small>The email address your KoshMoney account uses, which is where the payout goes. <a href="https://koshmoney.com/" target="_blank" rel="noreferrer">Create a Kosh account</a> if you need one, then return here.</small></label><label><span class="yr-field-label">Email address</span><input name="email" type="email" autocomplete="email" required maxlength="254" placeholder="you@example.com"></label><label><span class="yr-field-label">Telegram username</span><input name="telegram" type="text" autocomplete="off" required maxlength="33" placeholder="@username"></label></div><label class="yr-kosh"><input type="checkbox" name="detailsConfirmed" required><span>I have checked these details and confirm they are correct. I have a Kosh account on that email, or I will create one before payout.</span></label><p class="yr-error" id="yr-error" role="alert"></p><div class="yr-form-actions"><button class="yr-primary" type="submit">Submit reward details</button></div></form>
+        <form id="yr-form"><div class="yr-fields"><label><span class="yr-field-label">Email address</span><input name="email" type="email" autocomplete="email" required maxlength="254" placeholder="you@example.com"></label><label><span class="yr-field-label">Telegram username</span><input name="telegram" type="text" autocomplete="off" required maxlength="33" placeholder="@username"></label></div><label class="yr-kosh"><input type="checkbox" name="detailsConfirmed" required><span>I have checked these details and confirm they are correct.</span></label><p class="yr-error" id="yr-error" role="alert"></p><div class="yr-form-actions"><button class="yr-primary" type="submit">Submit reward details</button></div></form>
       </div>
     </div>`;
     wireCardTilt();

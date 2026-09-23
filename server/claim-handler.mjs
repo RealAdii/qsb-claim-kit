@@ -1,8 +1,8 @@
 class ClientError extends Error {
   constructor(status, message) { super(message); this.status = status; }
 }
-const limits = { koshEmail: 254, email: 254, telegram: 64 };
-const fieldNames = { koshEmail: "Kosh account email", email: "email address", telegram: "Telegram username" };
+const limits = { email: 254, telegram: 64 };
+const fieldNames = { email: "email address", telegram: "Telegram username" };
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export function validate(body) {
   if (!body || typeof body !== "object" || Array.isArray(body)) throw new ClientError(400, "Invalid form.");
@@ -13,8 +13,7 @@ export function validate(body) {
     if (!fields[name] || fields[name].length > max) throw new ClientError(400, `Check your ${fieldNames[name]}.`);
   }
   if (!emailPattern.test(fields.email)) throw new ClientError(400, "Enter a valid email address.");
-  if (!emailPattern.test(fields.koshEmail)) throw new ClientError(400, "Enter the email address on your Kosh account.");
-  fields.koshEmail = fields.koshEmail.toLowerCase();
+  fields.email = fields.email.toLowerCase();
   if (!/^@?[A-Za-z0-9_]{5,32}$/.test(fields.telegram)) throw new ClientError(400, "Enter a valid Telegram username.");
   fields.telegram = fields.telegram.startsWith("@") ? fields.telegram : `@${fields.telegram}`;
   if (body.detailsConfirmed !== true) throw new ClientError(400, "Confirm that your details are correct before submitting.");

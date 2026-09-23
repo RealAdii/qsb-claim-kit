@@ -36,7 +36,7 @@ const client = (status) => ({ status: async () => status, save: async () => ({ o
 test("a winner sees the card, the amount and the form", async () => {
   const entry = installDom();
   await mountClaim({ entry, headerSlot: element(), client: client({ user, eligible: true, claimed: false, award: { amount: 2500 } }) });
-  for (const fragment of ["yr-card", "@RealAdii", "WINNER", "$2,500", 'name="koshEmail"', 'name="email"', 'name="telegram"', 'name="detailsConfirmed"']) {
+  for (const fragment of ["yr-card", "@RealAdii", "WINNER", "$2,500", 'name="email"', 'name="telegram"', 'name="detailsConfirmed"']) {
     assert.ok(entry.html.includes(fragment), `winner view is missing ${fragment}`);
   }
   assert.equal(entry.html.includes("Reward status is unavailable"), false);
