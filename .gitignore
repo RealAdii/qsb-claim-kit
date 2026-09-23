@@ -8,3 +8,4 @@ board-solvers.json
 .vercel
 .env*.local
 .vercel-github-app.json
+.env.production.handover
