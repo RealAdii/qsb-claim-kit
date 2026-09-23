@@ -124,7 +124,7 @@ export async function mountClaim({ entry, client = httpClient(), headerSlot = do
     const login = state?.user?.login;
     const who = login ? `<p class="yr-fineprint">Filed for @${safe(login)}.</p>` : "";
     const mark = state?.user?.id ? `<img class="yr-avatar" src="${avatar(state.user.id)}" alt="" width="68" height="68">` : `<span class="yr-state-icon" aria-hidden="true">✓</span>`;
-    entry.innerHTML = `<div class="yr-state" role="status">${mark}<div><h2>Details received</h2><p>The team will be in touch with you soon about the next steps on receiving the reward.</p>${who}</div></div>`;
+    entry.innerHTML = `<div class="yr-state" role="status">${mark}<div><h2>Details received</h2><p>The team will be in touch with you soon about the next steps on receiving the reward.</p><p class="yr-help">Questions in the meantime? Ask in the <a href="https://t.me/+ZYLaSGIEYgE5ODQ9" target="_blank" rel="noreferrer">Telegram group</a> or on <a href="https://yukonresearch.slack.com/join/shared_invite/zt-4667dhade-vm6H9hWQwSGxv8WnXYUlpQ" target="_blank" rel="noreferrer">Slack</a>.</p>${who}</div></div>`;
   }
   function wireCardTilt() {
     const card = entry.querySelector("#yr-card");
