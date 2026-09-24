@@ -25,6 +25,14 @@ export default function QsbHero({ mediaBase = "/media", leaderboardUrl = "https:
           </div>
           <div className="yr-top-right">
             <a className="yr-navlink" href={leaderboardUrl}>Leaderboard</a>
+            <details className="yr-help-menu">
+              <summary className="yr-navlink">Need help?</summary>
+              <div className="yr-help-panel">
+                <p>Ask the team or other solvers.</p>
+                <a href="https://t.me/+ZYLaSGIEYgE5ODQ9" target="_blank" rel="noreferrer">Telegram group</a>
+                <a href="https://yukonresearch.slack.com/join/shared_invite/zt-4667dhade-vm6H9hWQwSGxv8WnXYUlpQ" target="_blank" rel="noreferrer">Slack group</a>
+              </div>
+            </details>
             {/* QsbClaim renders the connect control here. */}
             <span id="claim-connect" className="yr-header-cta" />
           </div>
