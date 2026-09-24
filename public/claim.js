@@ -13,11 +13,18 @@ export function httpClient(endpoint = "/claim/api/yukon/reward-claim", loginUrl 
     }
     return result;
   }
+  async function endSession() {
+    try { await fetch("/claim/auth/logout", { method: "POST", credentials: "same-origin" }); } catch { /* the cookie is gone either way */ }
+  }
   async function signOut() {
-    try { await fetch("/claim/auth/logout", { method: "POST", credentials: "same-origin" }); } catch { /* sign in again regardless */ }
+    await endSession();
     window.location.assign("/claim/auth/github");
   }
-  return { status: () => request("GET"), save: (data) => request("POST", data), connect: () => { window.location.assign(loginUrl); }, signOut };
+  async function logout() {
+    await endSession();
+    return { user: null, eligible: false, claimed: false };
+  }
+  return { status: () => request("GET"), save: (data) => request("POST", data), connect: () => { window.location.assign(loginUrl); }, signOut, logout };
 }
 
 const money = (amount) => `$${Number(amount).toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
@@ -55,7 +62,7 @@ export function createAccountHeader({ slot, client, onState }) {
       slot.querySelector("#yr-header-connect").onclick = (event) => connect(event.currentTarget);
       return;
     }
-    slot.innerHTML = `<div class="yr-account"><button type="button" class="yr-account-pill" id="yr-account-pill" aria-haspopup="menu" aria-expanded="false"><img class="yr-account-avatar" src="${avatar(state.user.id)}" alt="" width="28" height="28"><span>${safe(state.user.login)}</span><svg class="yr-chevron" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="m4 6 4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button><div class="yr-account-menu" id="yr-account-menu" role="menu" hidden><button type="button" role="menuitem" id="yr-switch-menu">Use another GitHub account</button></div></div>`;
+    slot.innerHTML = `<div class="yr-account"><button type="button" class="yr-account-pill" id="yr-account-pill" aria-haspopup="menu" aria-expanded="false"><img class="yr-account-avatar" src="${avatar(state.user.id)}" alt="" width="28" height="28"><span>${safe(state.user.login)}</span><svg class="yr-chevron" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="m4 6 4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button><div class="yr-account-menu" id="yr-account-menu" role="menu" hidden><button type="button" role="menuitem" id="yr-switch-menu">Use another GitHub account</button><button type="button" role="menuitem" id="yr-signout-menu">Sign out</button></div></div>`;
     const pill = slot.querySelector("#yr-account-pill");
     const menu = slot.querySelector("#yr-account-menu");
     const closeMenu = () => { menu.hidden = true; pill.setAttribute("aria-expanded", "false"); };
@@ -66,6 +73,12 @@ export function createAccountHeader({ slot, client, onState }) {
       if (open) menu.querySelector("button").focus();
     };
     menu.querySelector("#yr-switch-menu").onclick = switchAccount;
+    menu.querySelector("#yr-signout-menu").onclick = async (event) => {
+      const button = event.currentTarget;
+      button.disabled = true; button.textContent = "Signing out...";
+      const next = await client.logout?.();
+      if (next) onState?.(next, false);
+    };
     document.addEventListener("click", closeMenu);
     document.addEventListener("keydown", (event) => { if (event.key === "Escape") closeMenu(); });
   }

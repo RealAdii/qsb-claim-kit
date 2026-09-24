@@ -14,6 +14,7 @@ await mountClaim({
     async status() { return status(); },
     async connect() { connected = true; return status(); },
     async signOut() { connected = false; claimed = false; return status(); },
+    async logout() { connected = false; claimed = false; return status(); },
     async save() { claimed = true; return { ok: true }; },
   },
 });
