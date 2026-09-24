@@ -26,6 +26,10 @@ async function sendMedia(name, type, req, res) {
 const authMode = process.env.AUTH_MODE || "demo";
 let githubAuth, claimHandler, pool, appOrigin, devClaims, localOnly = false, prizes = async () => new Map();
 const { createLeaderboard, readRoster } = await import("./leaderboard.mjs");
+// Team accounts are shown but never paid, so the board can say so out loud.
+let team = new Set();
+try { team = new Set(JSON.parse(await readFile(new URL("../team.json", import.meta.url), "utf8")).map((login) => login.toLowerCase())); }
+catch (error) { if (error.code !== "ENOENT") throw error; }
 const leaderboard = createLeaderboard();
 const rosterFile = new URL(`../${process.env.BOARD_ROSTER_FILE || "board-solvers.json"}`, import.meta.url);
 let roster = null;
@@ -127,24 +131,25 @@ const server = createServer(async (req, res) => {
     }
     if (url.pathname === "/claim/api/qsb/leaderboard") {
       try {
-        if (roster) {
-          const awarded = await prizes();
-          const pinned = roster.map((solver) => ({ ...solver, prize: solver.prize ?? (solver.avatarId ? awarded.get(solver.avatarId) ?? null : null) }));
-          // Everyone the roster does not pin still comes from the challenge page,
-          // ranked below the pinned rows.
-          let live = [];
-          try { live = (await leaderboard.get()).solvers; } catch { live = leaderboard.peek().solvers; }
-          const seen = new Set(pinned.flatMap((solver) => [solver.login.toLowerCase(), solver.avatarId].filter(Boolean)));
-          const rest = live
-            .filter((solver) => !seen.has(solver.login.toLowerCase()) && !seen.has(solver.avatarId))
-            .map((solver, index) => ({ ...solver, rank: pinned.length + index + 1, prize: solver.avatarId ? awarded.get(solver.avatarId) ?? null : null }));
-          res.writeHead(200, { "Content-Type": "application/json", "Cache-Control": "no-store" });
-          return res.end(JSON.stringify({ updatedAt: Date.now(), stale: false, source: "roster", solvers: [...pinned, ...rest] }));
-        }
         const [board, awarded] = await Promise.all([leaderboard.get(), prizes()]);
-        const solvers = board.solvers.map((solver) => ({ ...solver, prize: awarded.get(solver.avatarId) ?? null }));
+        const pinned = (roster || []).map((solver) => solver.login.toLowerCase());
+        const decorate = (solver, index) => ({
+          rank: index + 1,
+          login: solver.login,
+          avatarId: solver.avatarId,
+          gains: solver.gains || null,
+          total: solver.total ?? null,
+          promotions: solver.promotions ?? null,
+          title: solver.title ?? null,
+          team: team.has(solver.login.toLowerCase()),
+          prize: solver.prize ?? (solver.avatarId ? awarded.get(solver.avatarId) ?? null : null),
+        });
+        const byLogin = new Map(board.solvers.map((solver) => [solver.login.toLowerCase(), solver]));
+        const head = (roster || []).map((solver) => ({ ...byLogin.get(solver.login.toLowerCase()), ...solver }));
+        const rest = board.solvers.filter((solver) => !pinned.includes(solver.login.toLowerCase()));
+        const solvers = [...head, ...rest].map(decorate);
         res.writeHead(200, { "Content-Type": "application/json", "Cache-Control": "no-store" });
-        return res.end(JSON.stringify({ updatedAt: board.fetchedAt, stale: board.stale, solvers }));
+        return res.end(JSON.stringify({ updatedAt: board.fetchedAt, stale: board.stale, workloads: board.workloads, solvers }));
       } catch {
         res.writeHead(503, { "Content-Type": "application/json", "Cache-Control": "no-store" });
         return res.end(JSON.stringify({ error: "The leaderboard is unavailable right now." }));

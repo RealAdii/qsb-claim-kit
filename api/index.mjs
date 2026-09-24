@@ -5,6 +5,7 @@ import { createGithubAuth, postgresAuthStore } from "../server/github-auth.mjs";
 import { createClaimHandler } from "../server/claim-handler.mjs";
 import { postgresStore } from "../server/store.mjs";
 import { createLeaderboard } from "../server/leaderboard.mjs";
+import { readFile } from "node:fs/promises";
 
 const required = ["APP_ORIGIN", "DATABASE_URL", "CLAIM_ENCRYPTION_KEY", "GITHUB_CLIENT_ID", "GITHUB_CLIENT_SECRET", "GITHUB_CALLBACK_URL"];
 const missing = required.filter((key) => !process.env[key]);
@@ -31,6 +32,15 @@ const claimHandler = createClaimHandler({
   },
   store: postgresStore(pool),
 });
+
+// Team accounts appear on the board but never receive a reward.
+let teamCache = null;
+async function teamAccounts() {
+  if (teamCache) return teamCache;
+  try { teamCache = new Set(JSON.parse(await readFile(new URL("../team.json", import.meta.url), "utf8")).map((login) => login.toLowerCase())); }
+  catch { teamCache = new Set(); }
+  return teamCache;
+}
 
 async function prizes() {
   const result = await pool.query("SELECT github_id, SUM(award_amount)::float8 AS amount FROM yukon_reward_awards WHERE finalized=true GROUP BY github_id");
@@ -68,9 +78,19 @@ export default async function handler(req, res) {
     if (url.pathname === "/claim/api/yukon/reward-claim") return send(await claimHandler(await toRequest(req)), res);
     if (url.pathname === "/claim/api/qsb/leaderboard") {
       const [board, awarded] = await Promise.all([leaderboard.get(), prizes()]);
-      const solvers = board.solvers.map((solver) => ({ ...solver, prize: solver.avatarId ? awarded.get(solver.avatarId) ?? null : null }));
+      const team = await teamAccounts();
+      const solvers = board.solvers.map((solver, index) => ({
+        rank: index + 1,
+        login: solver.login,
+        avatarId: solver.avatarId,
+        gains: solver.gains,
+        total: solver.total,
+        promotions: solver.promotions,
+        team: team.has(solver.login.toLowerCase()),
+        prize: solver.avatarId ? awarded.get(solver.avatarId) ?? null : null,
+      }));
       res.writeHead(200, { "Content-Type": "application/json", "Cache-Control": "no-store" });
-      return res.end(JSON.stringify({ updatedAt: board.fetchedAt, stale: board.stale, solvers }));
+      return res.end(JSON.stringify({ updatedAt: board.fetchedAt, stale: board.stale, workloads: board.workloads, solvers }));
     }
     res.statusCode = 404; res.end("Not found");
   } catch {
