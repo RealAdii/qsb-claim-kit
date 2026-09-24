@@ -33,18 +33,19 @@ export function startCountdown(node) {
   if (!node?.dataset?.deadline) return;
   const deadline = Date.parse(node.dataset.deadline);
   if (Number.isNaN(deadline)) return;
-  const unit = (value, name) => `<span class="yr-count-unit"><b>${String(value).padStart(2, "0")}</b><i>${name}${value === 1 ? "" : "s"}</i></span>`;
+  const unit = (value, name) => `<span class="yr-count-unit"><b>${String(value).padStart(2, "0")}</b><i>${name}</i></span>`;
   const tick = () => {
     const left = deadline - Date.now();
     if (left <= 0) {
-      node.innerHTML = `<span class="yr-count-done">The challenge has closed.</span>`;
+      node.innerHTML = `<span class="yr-count-done">The challenge has closed</span>`;
       return;
     }
     const days = Math.floor(left / 864e5);
     const hours = Math.floor((left % 864e5) / 36e5);
     const minutes = Math.floor((left % 36e5) / 6e4);
     const seconds = Math.floor((left % 6e4) / 1000);
-    node.innerHTML = `${unit(days, "day")}${unit(hours, "hour")}${unit(minutes, "min")}${unit(seconds, "second")}<span class="yr-count-label">left for the challenge to end</span>`;
+    node.innerHTML = `<span class="yr-count-label">Challenge ends in</span>
+      <span class="yr-count-units">${unit(days, "days")}${unit(hours, "hrs")}${unit(minutes, "min")}${unit(seconds, "sec")}</span>`;
     setTimeout(tick, 1000 - (Date.now() % 1000));
   };
   tick();
