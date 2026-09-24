@@ -155,4 +155,4 @@ html{scroll-behavior:smooth}
 .yr-row-prize{white-space:nowrap}
 
 .yr-period em{grid-column:1/-1;margin-top:4px;color:#cfd6df;font-size:11px;font-style:normal;letter-spacing:.02em}
-.yr-countdown{margin:18px 0 0;color:var(--record);font-size:14px;font-weight:600;letter-spacing:.01em;font-variant-numeric:tabular-nums}
+.yr-countdown{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin:20px 0 0;color:#fff;font-variant-numeric:tabular-nums}.yr-count-unit{display:inline-flex;align-items:baseline;gap:5px;padding:7px 12px;border:1px solid #ffffff33;border-radius:9px;background:#0d131c52;backdrop-filter:blur(2px)}.yr-count-unit+.yr-count-unit{margin-left:-2px}.yr-count-unit b{font-size:clamp(18px,1.8vw,24px);font-weight:600;letter-spacing:-.02em;color:var(--record)}.yr-count-unit i{font-style:normal;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#cfd6df}.yr-count-label{color:#e7ecf3;font-size:13px;font-weight:500}.yr-count-done{color:var(--record);font-size:15px;font-weight:600}

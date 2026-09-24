@@ -27,21 +27,25 @@ export function httpClient(endpoint = "/claim/api/yukon/reward-claim", loginUrl 
   return { status: () => request("GET"), save: (data) => request("POST", data), connect: () => { window.location.assign(loginUrl); }, signOut, logout };
 }
 
-// Counts down to the moment Weeks 2 and 3 close, in whole units so it reads
-// at a glance rather than ticking distractingly.
+// Counts down to the close of the challenge, ticking every second so the time
+// pressure is visible rather than implied.
 export function startCountdown(node) {
   if (!node?.dataset?.deadline) return;
   const deadline = Date.parse(node.dataset.deadline);
   if (Number.isNaN(deadline)) return;
+  const unit = (value, name) => `<span class="yr-count-unit"><b>${String(value).padStart(2, "0")}</b><i>${name}${value === 1 ? "" : "s"}</i></span>`;
   const tick = () => {
     const left = deadline - Date.now();
-    if (left <= 0) { node.textContent = "Weeks 2 and 3 have closed."; return; }
+    if (left <= 0) {
+      node.innerHTML = `<span class="yr-count-done">The challenge has closed.</span>`;
+      return;
+    }
     const days = Math.floor(left / 864e5);
     const hours = Math.floor((left % 864e5) / 36e5);
     const minutes = Math.floor((left % 36e5) / 6e4);
-    const parts = days ? [`${days}d`, `${hours}h`, `${minutes}m`] : [`${hours}h`, `${minutes}m`, `${Math.floor((left % 6e4) / 1000)}s`];
-    node.textContent = `Weeks 2 and 3 close in ${parts.join(" ")}`;
-    setTimeout(tick, days ? 30000 : 1000);
+    const seconds = Math.floor((left % 6e4) / 1000);
+    node.innerHTML = `${unit(days, "day")}${unit(hours, "hour")}${unit(minutes, "min")}${unit(seconds, "second")}<span class="yr-count-label">left for the challenge to end</span>`;
+    setTimeout(tick, 1000 - (Date.now() % 1000));
   };
   tick();
 }
