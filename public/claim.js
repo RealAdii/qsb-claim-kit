@@ -27,6 +27,25 @@ export function httpClient(endpoint = "/claim/api/yukon/reward-claim", loginUrl 
   return { status: () => request("GET"), save: (data) => request("POST", data), connect: () => { window.location.assign(loginUrl); }, signOut, logout };
 }
 
+// Counts down to the moment Weeks 2 and 3 close, in whole units so it reads
+// at a glance rather than ticking distractingly.
+export function startCountdown(node) {
+  if (!node?.dataset?.deadline) return;
+  const deadline = Date.parse(node.dataset.deadline);
+  if (Number.isNaN(deadline)) return;
+  const tick = () => {
+    const left = deadline - Date.now();
+    if (left <= 0) { node.textContent = "Weeks 2 and 3 have closed."; return; }
+    const days = Math.floor(left / 864e5);
+    const hours = Math.floor((left % 864e5) / 36e5);
+    const minutes = Math.floor((left % 36e5) / 6e4);
+    const parts = days ? [`${days}d`, `${hours}h`, `${minutes}m`] : [`${hours}h`, `${minutes}m`, `${Math.floor((left % 6e4) / 1000)}s`];
+    node.textContent = `Weeks 2 and 3 close in ${parts.join(" ")}`;
+    setTimeout(tick, days ? 30000 : 1000);
+  };
+  tick();
+}
+
 const money = (amount) => `$${Number(amount).toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
 // Collectible winner card: foil edge, halftone portrait, nameplate. Every
 // winner reads "WINNER" regardless of which award they hold.
