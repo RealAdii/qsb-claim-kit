@@ -150,3 +150,6 @@ html{scroll-behavior:smooth}
 .yr-period-tab.is-active{background:#fff;color:var(--ink)}
 .yr-period-tab.is-active span{color:var(--green)}
 .yr-winners-empty{margin:0;padding:26px 20px;color:var(--muted);font-size:14px}
+
+.yr-place{display:inline-flex;align-items:center;margin-left:8px;padding:2px 8px;border-radius:999px;background:var(--mint);color:var(--green);font-size:11px;font-weight:750;letter-spacing:.06em}
+.yr-row-prize{white-space:nowrap}

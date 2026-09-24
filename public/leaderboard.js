@@ -37,10 +37,11 @@ function winnerCell(solver, index) {
 }
 
 function row(solver, index) {
+  const place = Number.isInteger(solver.place) ? `<span class="yr-place">${PLACES[solver.place]}</span>` : "";
   return `<li class="yr-row${index === 0 && !solver.team ? " is-lead" : ""}">
     <span class="yr-row-rank">${String(solver.rank).padStart(2, "0")}</span>
     ${solver.avatarId ? `<img class="yr-row-avatar" src="${avatarUrl(solver.avatarId, 64)}" alt="" width="32" height="32" loading="lazy">` : `<span class="yr-row-avatar"></span>`}
-    <span class="yr-row-name">${safe(solver.login)}${index === 0 && !solver.team ? crown : ""}${solver.team ? teamTag : ""}</span>
+    <span class="yr-row-name">${safe(solver.login)}${place}${solver.team ? teamTag : ""}</span>
     <span class="yr-row-gain">${breakdown(solver)}<small>total gain</small></span>
     <span class="yr-row-prize">${solver.team ? "<span>Not eligible</span>" : solver.prize ? money(solver.prize) : "<span>&mdash;</span>"}</span>
   </li>`;
@@ -55,13 +56,23 @@ const range = (period) => {
 };
 
 const PERIODS = [
-  { key: "week1", label: "Week 1", pool: "$2,000" },
-  { key: "weeks23", label: "Weeks 2 and 3", pool: "$18,000" },
+  { key: "week1", label: "Week 1", pool: "$2,000", prizes: [1000, 600, 400] },
+  { key: "weeks23", label: "Weeks 2 and 3", pool: "$18,000", prizes: [6000, 3600, 2400] },
 ];
+const PLACES = ["1st", "2nd", "3rd"];
 
 function render(board, active) {
   const period = board.periods?.[active] || { solvers: board.solvers, workloads: board.workloads };
-  const eligible = period.solvers.filter((solver) => !solver.team);
+  // Places and prizes follow the published structure, counting only solvers
+  // who can be paid. A finalized award in the database still wins over this.
+  const { prizes } = PERIODS.find((p) => p.key === active);
+  let place = 0;
+  const solvers = period.solvers.map((solver) => {
+    if (solver.team) return solver;
+    const index = place++;
+    return index < 3 ? { ...solver, place: index, prize: solver.prize ?? prizes[index] } : solver;
+  });
+  const eligible = solvers.filter((solver) => !solver.team);
   const top = eligible.slice(0, 3);
   const tabs = PERIODS.map(({ key, label, pool }) =>
     `<button type="button" class="yr-period-tab${key === active ? " is-active" : ""}" data-period="${key}" aria-pressed="${key === active}">${label}<span>${pool}</span><small>${range(board.periods?.[key])}</small></button>`).join("");
@@ -70,8 +81,8 @@ function render(board, active) {
     <header class="yr-winners-head"><h2>${heading} winners</h2><p class="yr-winners-range">${range(period)}${range(period) ? " · " : ""}${active === "week1" ? "Closed" : "Still running"}</p></header>
     ${top.length ? `<div class="yr-winners-grid">${top.map(winnerCell).join("")}</div>`
       : `<p class="yr-winners-empty">No promoted submissions in this period yet. Winners appear here as solvers push the record.</p>`}`;
-  rest.innerHTML = period.solvers.length
-    ? `<div class="yr-rows-head"><span>Solver</span><span class="yr-rows-head-gain">Total gain</span><span>Reward</span></div><ol class="yr-rows">${period.solvers.map(row).join("")}</ol>`
+  rest.innerHTML = solvers.length
+    ? `<div class="yr-rows-head"><span>Solver</span><span class="yr-rows-head-gain">Total gain</span><span>Reward</span></div><ol class="yr-rows">${solvers.map(row).join("")}</ol>`
     : `<p class="yr-winners-empty">Nothing here yet.</p>`;
   for (const tab of winners.querySelectorAll(".yr-period-tab")) {
     tab.onclick = () => render(board, tab.dataset.period);
