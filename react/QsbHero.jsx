@@ -15,9 +15,9 @@ export default function QsbHero({ mediaBase = "/media", leaderboardUrl = "https:
       <div className="yr-hero-inner">
         <header className="yr-top">
           <div className="yr-lockup">
-            <a className="yr-brand" href="https://www.yukon.org">Yukon</a>
+            <a className="yr-brand" href="/claim">Yukon</a>
             <span className="yr-lockup-rule" aria-hidden="true" />
-            <a className="yr-brand-qsb" href={leaderboardUrl}>Quantum Safe Bitcoin</a>
+            <a className="yr-brand-qsb" href="/claim">Quantum Safe Bitcoin</a>
             <span className="yr-lockup-with">with</span>
             <a className="yr-starkware" href="https://starkware.co/" target="_blank" rel="noreferrer" aria-label="StarkWare">
               <img src={`${mediaBase}/starkware-logo-white.svg`} alt="" width={201} height={33} />
