@@ -46,6 +46,14 @@ function row(solver, index) {
   </li>`;
 }
 
+const day = (value) => new Date(value).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
+const range = (period) => {
+  if (!period?.range) return "";
+  // The window is half open, so the last day shown is the day before it ends.
+  const until = new Date(Date.parse(period.range.until) - 864e5);
+  return `${day(period.range.from)} to ${day(until)}`;
+};
+
 const PERIODS = [
   { key: "week1", label: "Week 1", pool: "$2,000" },
   { key: "weeks23", label: "Weeks 2 and 3", pool: "$18,000" },
@@ -56,10 +64,10 @@ function render(board, active) {
   const eligible = period.solvers.filter((solver) => !solver.team);
   const top = eligible.slice(0, 3);
   const tabs = PERIODS.map(({ key, label, pool }) =>
-    `<button type="button" class="yr-period-tab${key === active ? " is-active" : ""}" data-period="${key}" aria-pressed="${key === active}">${label}<span>${pool}</span></button>`).join("");
+    `<button type="button" class="yr-period-tab${key === active ? " is-active" : ""}" data-period="${key}" aria-pressed="${key === active}">${label}<span>${pool}</span><small>${range(board.periods?.[key])}</small></button>`).join("");
   const heading = PERIODS.find((p) => p.key === active).label;
   winners.innerHTML = `<div class="yr-period-tabs" role="group" aria-label="Reward period">${tabs}</div>
-    <header class="yr-winners-head"><h2>${heading} winners</h2><p class="yr-winners-range">${active === "week1" ? "Closed" : "Still running"}</p></header>
+    <header class="yr-winners-head"><h2>${heading} winners</h2><p class="yr-winners-range">${range(period)}${range(period) ? " · " : ""}${active === "week1" ? "Closed" : "Still running"}</p></header>
     ${top.length ? `<div class="yr-winners-grid">${top.map(winnerCell).join("")}</div>`
       : `<p class="yr-winners-empty">No promoted submissions in this period yet. Winners appear here as solvers push the record.</p>`}`;
   rest.innerHTML = period.solvers.length

@@ -145,7 +145,7 @@ html{scroll-behavior:smooth}
 .yr-period-tabs{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--line)}
 .yr-period-tab{display:grid;justify-items:center;gap:2px;padding:12px 14px;border:0;border-right:1px solid var(--line);background:var(--ivory);color:var(--muted);font-size:14px;font-weight:600;cursor:pointer;transition:background .15s,color .15s}
 .yr-period-tab:last-child{border-right:0}
-.yr-period-tab span{font-size:12px;font-weight:500;color:var(--muted)}
+.yr-period-tab span{font-size:12px;font-weight:500;color:var(--muted)}.yr-period-tab small{color:var(--muted);font-size:11px;font-weight:450}
 .yr-period-tab:hover{background:#eceff3;color:var(--ink)}
 .yr-period-tab.is-active{background:#fff;color:var(--ink)}
 .yr-period-tab.is-active span{color:var(--green)}

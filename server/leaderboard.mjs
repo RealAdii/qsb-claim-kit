@@ -14,7 +14,8 @@ const avatarId = (url) => /avatars\.githubusercontent\.com\/u\/(\d+)/.exec(url |
 // Week 1 is scored on the original baseline. Weeks 2 and 3 start again from
 // wherever the frontier stood when Week 1 closed, so early entrants cannot
 // carry their first-mover gains forward.
-export const WEEK1_END = process.env.WEEK1_END || "2026-09-15T00:00:00.000Z";
+export const WEEK1_END = process.env.WEEK1_END || "2026-09-22T00:00:00.000Z";
+export const WEEKS23_END = process.env.WEEKS23_END || new Date(Date.parse(process.env.WEEK1_END || "2026-09-22T00:00:00.000Z") + 14 * 864e5).toISOString();
 
 export function accumulate(benchmark, baseline, submissions, into = new Map(), window = {}) {
   if (!Number.isFinite(baseline) || baseline <= 0) throw new Error(`${benchmark}: a positive baseline is required.`);
@@ -70,10 +71,14 @@ export async function loadStandings(fetchImpl = fetch) {
     ]);
     raw[name] = { baseline: benchmark.baselineScore ?? benchmark.benchmark?.baselineScore, submissions: board.submissions || [] };
   }
+  // The challenge opened with its first promoted submission.
+  const firstAt = Object.values(raw)
+    .flatMap(({ submissions }) => submissions.filter((s) => s.status === "accepted" && s.improved).map((s) => s.promotionFinishedAt || s.createdAt))
+    .sort()[0] || WEEK1_END;
   const periods = {
     all: {},
-    week1: { until: WEEK1_END },
-    weeks23: { from: WEEK1_END },
+    week1: { until: WEEK1_END, from: null, range: { from: firstAt, until: WEEK1_END } },
+    weeks23: { from: WEEK1_END, range: { from: WEEK1_END, until: WEEKS23_END } },
   };
   const out = {};
   for (const [period, window] of Object.entries(periods)) {
@@ -83,9 +88,9 @@ export async function loadStandings(fetchImpl = fetch) {
       const result = accumulate(name, baseline, submissions, solvers, window);
       workloads[name] = { baseline: result.baseline, record: result.record, improvement: ((result.record - result.baseline) / result.baseline) * 100 };
     }
-    out[period] = { solvers: rank(solvers), workloads };
+    out[period] = { solvers: rank(solvers), workloads, range: window.range || null };
   }
-  return { ...out.all, periods: out, week1End: WEEK1_END };
+  return { ...out.all, periods: out, week1End: WEEK1_END, weeks23End: WEEKS23_END };
 }
 
 // One cached copy shared by every visitor, refreshed in the background.

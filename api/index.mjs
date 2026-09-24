@@ -89,7 +89,7 @@ export default async function handler(req, res) {
         team: team.has(solver.login.toLowerCase()),
         prize: team.has(solver.login.toLowerCase()) ? null : solver.avatarId ? awarded.get(solver.avatarId) ?? null : null,
       });
-      const periods = Object.fromEntries(Object.entries(board.periods || {}).map(([name, period]) => [name, { workloads: period.workloads, solvers: period.solvers.map(decorate) }]));
+      const periods = Object.fromEntries(Object.entries(board.periods || {}).map(([name, period]) => [name, { workloads: period.workloads, range: period.range, solvers: period.solvers.map(decorate) }]));
       res.writeHead(200, { "Content-Type": "application/json", "Cache-Control": "no-store" });
       return res.end(JSON.stringify({ updatedAt: board.fetchedAt, stale: board.stale, week1End: board.week1End, workloads: board.workloads, periods, solvers: board.solvers.map(decorate) }));
     }
