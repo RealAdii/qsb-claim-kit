@@ -79,7 +79,7 @@ export default async function handler(req, res) {
     if (url.pathname === "/claim/api/qsb/leaderboard") {
       const [board, awarded] = await Promise.all([leaderboard.get(), prizes()]);
       const team = await teamAccounts();
-      const solvers = board.solvers.map((solver, index) => ({
+      const decorate = (solver, index) => ({
         rank: index + 1,
         login: solver.login,
         avatarId: solver.avatarId,
@@ -88,9 +88,10 @@ export default async function handler(req, res) {
         promotions: solver.promotions,
         team: team.has(solver.login.toLowerCase()),
         prize: team.has(solver.login.toLowerCase()) ? null : solver.avatarId ? awarded.get(solver.avatarId) ?? null : null,
-      }));
+      });
+      const periods = Object.fromEntries(Object.entries(board.periods || {}).map(([name, period]) => [name, { workloads: period.workloads, solvers: period.solvers.map(decorate) }]));
       res.writeHead(200, { "Content-Type": "application/json", "Cache-Control": "no-store" });
-      return res.end(JSON.stringify({ updatedAt: board.fetchedAt, stale: board.stale, workloads: board.workloads, solvers }));
+      return res.end(JSON.stringify({ updatedAt: board.fetchedAt, stale: board.stale, week1End: board.week1End, workloads: board.workloads, periods, solvers: board.solvers.map(decorate) }));
     }
     res.statusCode = 404; res.end("Not found");
   } catch {

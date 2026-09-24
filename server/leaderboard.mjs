@@ -11,14 +11,27 @@ export const BENCHMARKS = {
 
 const avatarId = (url) => /avatars\.githubusercontent\.com\/u\/(\d+)/.exec(url || "")?.[1] || null;
 
-export function accumulate(benchmark, baseline, submissions, into = new Map()) {
+// Week 1 is scored on the original baseline. Weeks 2 and 3 start again from
+// wherever the frontier stood when Week 1 closed, so early entrants cannot
+// carry their first-mover gains forward.
+export const WEEK1_END = process.env.WEEK1_END || "2026-09-15T00:00:00.000Z";
+
+export function accumulate(benchmark, baseline, submissions, into = new Map(), window = {}) {
   if (!Number.isFinite(baseline) || baseline <= 0) throw new Error(`${benchmark}: a positive baseline is required.`);
+  const at = (s) => new Date(s.promotionFinishedAt || s.createdAt);
   const promoted = submissions
     .filter((s) => s.status === "accepted" && s.improved && Number.isFinite(s.officialScore))
-    .sort((a, b) => new Date(a.promotionFinishedAt || a.createdAt) - new Date(b.promotionFinishedAt || b.createdAt));
+    .sort((a, b) => at(a) - at(b));
+  const from = window.from ? new Date(window.from) : null;
+  const until = window.until ? new Date(window.until) : null;
+  // The baseline for a later window is the frontier the earlier one left behind.
   let frontier = baseline;
+  if (from) for (const s of promoted) if (at(s) < from) frontier = s.officialScore;
+  const periodBaseline = from ? frontier : baseline;
   for (const submission of promoted) {
-    const gain = ((submission.officialScore - frontier) / baseline) * 100;
+    if (from && at(submission) < from) continue;
+    if (until && at(submission) >= until) continue;
+    const gain = ((submission.officialScore - frontier) / periodBaseline) * 100;
     frontier = submission.officialScore;
     const login = submission.solverUsername;
     if (!login) continue;
@@ -29,7 +42,7 @@ export function accumulate(benchmark, baseline, submissions, into = new Map()) {
     row.avatarId = row.avatarId || avatarId(submission.solverAvatarUrl);
     into.set(login, row);
   }
-  return { solvers: into, record: frontier };
+  return { solvers: into, record: frontier, baseline: periodBaseline };
 }
 
 export function rank(solvers) {
@@ -49,18 +62,30 @@ async function readJson(url, fetchImpl) {
 }
 
 export async function loadStandings(fetchImpl = fetch) {
-  const solvers = new Map();
-  const workloads = {};
+  const raw = {};
   for (const [name, id] of Object.entries(BENCHMARKS)) {
     const [benchmark, board] = await Promise.all([
       readJson(`${API}/benchmarks/${id}`, fetchImpl),
       readJson(`${API}/benchmarks/${id}/submissions`, fetchImpl),
     ]);
-    const baseline = benchmark.baselineScore ?? benchmark.benchmark?.baselineScore;
-    const { record } = accumulate(name, baseline, board.submissions || [], solvers);
-    workloads[name] = { baseline, record, improvement: ((record - baseline) / baseline) * 100 };
+    raw[name] = { baseline: benchmark.baselineScore ?? benchmark.benchmark?.baselineScore, submissions: board.submissions || [] };
   }
-  return { solvers: rank(solvers), workloads };
+  const periods = {
+    all: {},
+    week1: { until: WEEK1_END },
+    weeks23: { from: WEEK1_END },
+  };
+  const out = {};
+  for (const [period, window] of Object.entries(periods)) {
+    const solvers = new Map();
+    const workloads = {};
+    for (const [name, { baseline, submissions }] of Object.entries(raw)) {
+      const result = accumulate(name, baseline, submissions, solvers, window);
+      workloads[name] = { baseline: result.baseline, record: result.record, improvement: ((result.record - result.baseline) / result.baseline) * 100 };
+    }
+    out[period] = { solvers: rank(solvers), workloads };
+  }
+  return { ...out.all, periods: out, week1End: WEEK1_END };
 }
 
 // One cached copy shared by every visitor, refreshed in the background.

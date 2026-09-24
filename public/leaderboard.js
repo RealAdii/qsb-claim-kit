@@ -46,24 +46,39 @@ function row(solver, index) {
   </li>`;
 }
 
+const PERIODS = [
+  { key: "week1", label: "Week 1", pool: "$2,000" },
+  { key: "weeks23", label: "Weeks 2 and 3", pool: "$18,000" },
+];
+
+function render(board, active) {
+  const period = board.periods?.[active] || { solvers: board.solvers, workloads: board.workloads };
+  const eligible = period.solvers.filter((solver) => !solver.team);
+  const top = eligible.slice(0, 3);
+  const tabs = PERIODS.map(({ key, label, pool }) =>
+    `<button type="button" class="yr-period-tab${key === active ? " is-active" : ""}" data-period="${key}" aria-pressed="${key === active}">${label}<span>${pool}</span></button>`).join("");
+  const heading = PERIODS.find((p) => p.key === active).label;
+  winners.innerHTML = `<div class="yr-period-tabs" role="group" aria-label="Reward period">${tabs}</div>
+    <header class="yr-winners-head"><h2>${heading} winners</h2><p class="yr-winners-range">${active === "week1" ? "Closed" : "Still running"}</p></header>
+    ${top.length ? `<div class="yr-winners-grid">${top.map(winnerCell).join("")}</div>`
+      : `<p class="yr-winners-empty">No promoted submissions in this period yet. Winners appear here as solvers push the record.</p>`}`;
+  rest.innerHTML = period.solvers.length
+    ? `<div class="yr-rows-head"><span>Solver</span><span class="yr-rows-head-gain">Total gain</span><span>Reward</span></div><ol class="yr-rows">${period.solvers.map(row).join("")}</ol>`
+    : `<p class="yr-winners-empty">Nothing here yet.</p>`;
+  for (const tab of winners.querySelectorAll(".yr-period-tab")) {
+    tab.onclick = () => render(board, tab.dataset.period);
+  }
+  const when = board.updatedAt ? new Date(board.updatedAt).toLocaleTimeString() : "";
+  const pinning = period.workloads?.pinning?.improvement;
+  const subset = period.workloads?.subset?.improvement;
+  note.textContent = `Total gain is every promoted submission a solver landed in this period, measured against the baseline the period started from and added across both workloads. Pinning has moved ${pinning ? pct(pinning) : "?"} and subset ${subset ? pct(subset) : "?"}. Weeks 2 and 3 start again from wherever the frontier stood when Week 1 closed. Standings as of ${when}${board.stale ? ", from the last good copy" : ""}.`;
+}
+
 try {
   const response = await fetch("/claim/api/qsb/leaderboard");
   if (!response.ok) throw new Error("unavailable");
   const board = await response.json();
-  // StarkWare accounts stay in the standings, with their real rank, but the
-  // winners panel only ever shows solvers who can actually be paid.
-  const eligible = board.solvers.filter((solver) => !solver.team);
-  const top = eligible.slice(0, 3);
-  const others = board.solvers;
-  winners.innerHTML = `<header class="yr-winners-head"><h2>Week 1 winners</h2><p class="yr-winners-range">Week 1 · Sep 8 to Sep 14, 2026</p></header>
-    <div class="yr-winners-grid">${top.map(winnerCell).join("")}</div>`;
-  rest.innerHTML = others.length
-    ? `<div class="yr-rows-head"><span>Solver</span><span class="yr-rows-head-gain">Total gain</span><span>Reward</span></div><ol class="yr-rows">${others.map(row).join("")}</ol>`
-    : "";
-  const when = board.updatedAt ? new Date(board.updatedAt).toLocaleTimeString() : "";
-  const pinning = board.workloads?.pinning?.improvement;
-  const subset = board.workloads?.subset?.improvement;
-  note.textContent = `Total gain is every promoted submission a solver landed, measured against each workload's baseline and added across both. Pinning has moved ${pinning ? pct(pinning) : "?"} and subset ${subset ? pct(subset) : "?"} since the challenge opened. Standings as of ${when}${board.stale ? ", from the last good copy" : ""}. Week 1 rewards only; Weeks 2 and 3 are still running.`;
+  render(board, "week1");
 } catch {
   note.textContent = "The leaderboard is unavailable right now. Please refresh to try again.";
 }

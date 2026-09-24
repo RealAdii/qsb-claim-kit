@@ -132,24 +132,19 @@ const server = createServer(async (req, res) => {
     if (url.pathname === "/claim/api/qsb/leaderboard") {
       try {
         const [board, awarded] = await Promise.all([leaderboard.get(), prizes()]);
-        const pinned = (roster || []).map((solver) => solver.login.toLowerCase());
         const decorate = (solver, index) => ({
           rank: index + 1,
           login: solver.login,
           avatarId: solver.avatarId,
-          gains: solver.gains || null,
-          total: solver.total ?? null,
-          promotions: solver.promotions ?? null,
-          title: solver.title ?? null,
+          gains: solver.gains,
+          total: solver.total,
+          promotions: solver.promotions,
           team: team.has(solver.login.toLowerCase()),
-          prize: team.has(solver.login.toLowerCase()) ? null : solver.prize ?? (solver.avatarId ? awarded.get(solver.avatarId) ?? null : null),
+          prize: team.has(solver.login.toLowerCase()) ? null : solver.avatarId ? awarded.get(solver.avatarId) ?? null : null,
         });
-        const byLogin = new Map(board.solvers.map((solver) => [solver.login.toLowerCase(), solver]));
-        const head = (roster || []).map((solver) => ({ ...byLogin.get(solver.login.toLowerCase()), ...solver }));
-        const rest = board.solvers.filter((solver) => !pinned.includes(solver.login.toLowerCase()));
-        const solvers = [...head, ...rest].map(decorate);
+        const periods = Object.fromEntries(Object.entries(board.periods || {}).map(([name, period]) => [name, { workloads: period.workloads, solvers: period.solvers.map(decorate) }]));
         res.writeHead(200, { "Content-Type": "application/json", "Cache-Control": "no-store" });
-        return res.end(JSON.stringify({ updatedAt: board.fetchedAt, stale: board.stale, workloads: board.workloads, solvers }));
+        return res.end(JSON.stringify({ updatedAt: board.fetchedAt, stale: board.stale, week1End: board.week1End, workloads: board.workloads, periods, solvers: board.solvers.map(decorate) }));
       } catch {
         res.writeHead(503, { "Content-Type": "application/json", "Cache-Control": "no-store" });
         return res.end(JSON.stringify({ error: "The leaderboard is unavailable right now." }));
