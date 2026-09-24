@@ -116,8 +116,8 @@ html{scroll-behavior:smooth}
 .yr-board-badges{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .yr-info{position:relative;display:grid;place-items:center;width:22px;height:22px;border:1px solid var(--line);border-radius:50%;color:var(--muted);font-size:12px;font-weight:750;cursor:help}
 .yr-info:hover,.yr-info:focus-visible{border-color:var(--green);color:var(--green)}
-.yr-team{position:relative;display:inline-flex;align-items:center;margin-left:8px;padding:2px 8px;border:1px solid var(--line);border-radius:999px;color:var(--muted);font-size:10px;font-weight:750;letter-spacing:.1em;text-transform:uppercase;cursor:help;white-space:nowrap}
-.yr-team:hover,.yr-team:focus-visible{border-color:var(--green);color:var(--green)}
+.yr-team{position:relative;display:inline-flex;align-items:center;margin-left:8px;cursor:help;vertical-align:middle}.yr-team img{display:block;width:16px;height:16px;opacity:.85;transition:opacity .15s,transform .15s}
+.yr-team:hover img,.yr-team:focus-visible img{opacity:1;transform:scale(1.08)}
 .yr-split{position:relative;display:inline-flex;cursor:help}
 .yr-tip{position:absolute;bottom:calc(100% + 10px);left:50%;z-index:20;display:grid;gap:6px;width:max-content;max-width:min(300px,72vw);padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:#fff;box-shadow:0 20px 44px -22px #0d131c8f;color:var(--ink);font-size:13px;font-weight:450;letter-spacing:normal;text-transform:none;line-height:1.5;opacity:0;visibility:hidden;transform:translate(-50%,4px);transition:opacity .14s,transform .14s,visibility .14s}
 .yr-team .yr-tip,.yr-info .yr-tip,.yr-split .yr-tip{pointer-events:none}

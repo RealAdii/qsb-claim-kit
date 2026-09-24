@@ -12,7 +12,7 @@ await mountAccount();
 
 const crown = '<svg class="yr-crown" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 7.5 7 11l5-6.5L17 11l4-3.5V18a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7.5Z"/></svg>';
 const titles = ["Champion", "2nd place", "3rd place"];
-const teamTag = '<span class="yr-team" tabindex="0" role="note" aria-label="Team account. Team members are not eligible for rewards."><span>Team</span><span class="yr-tip">Team accounts are shown for transparency. Nobody on the team receives a reward.</span></span>';
+const teamTag = '<span class="yr-team" tabindex="0" role="note" aria-label="StarkWare member. StarkWare members are not eligible for the rewards."><img src="/claim/media/favicon.svg" alt="" width="16" height="16"><span class="yr-tip">StarkWare members are not eligible for the rewards.</span></span>';
 
 function breakdown(solver) {
   return `<span class="yr-split" tabindex="0" role="note" aria-label="Pinning ${pct(solver.gains.pinning)}, subset ${pct(solver.gains.subset)}, from ${solver.promotions} promoted submissions.">
