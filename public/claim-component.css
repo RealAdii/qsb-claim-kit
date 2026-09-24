@@ -119,7 +119,7 @@ html{scroll-behavior:smooth}
 .yr-team{position:relative;display:inline-flex;align-items:center;margin-left:8px;cursor:help;vertical-align:middle}.yr-team img{display:block;width:16px;height:16px;opacity:.85;transition:opacity .15s,transform .15s}
 .yr-team:hover img,.yr-team:focus-visible img{opacity:1;transform:scale(1.08)}
 .yr-split{position:relative;display:inline-flex;cursor:help}
-.yr-tip{position:absolute;bottom:calc(100% + 10px);left:50%;z-index:20;display:grid;gap:6px;width:max-content;max-width:min(300px,72vw);padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:#fff;box-shadow:0 20px 44px -22px #0d131c8f;color:var(--ink);font-size:13px;font-weight:450;letter-spacing:normal;text-transform:none;line-height:1.5;opacity:0;visibility:hidden;transform:translate(-50%,4px);transition:opacity .14s,transform .14s,visibility .14s}
+.yr-tip{position:absolute;bottom:calc(100% + 10px);left:50%;z-index:20;display:grid;gap:5px;width:max-content;max-width:min(280px,80vw);padding:11px 13px;border:1px solid var(--line);border-radius:10px;background:#fff;box-shadow:0 20px 44px -22px #0d131c8f;color:var(--ink);font-size:13px;font-weight:450;letter-spacing:normal;text-transform:none;line-height:1.5;opacity:0;visibility:hidden;transform:translate(-50%,4px);transition:opacity .14s,transform .14s,visibility .14s}
 .yr-team .yr-tip,.yr-info .yr-tip,.yr-split .yr-tip{pointer-events:none}
 .yr-team:hover .yr-tip,.yr-team:focus-visible .yr-tip,.yr-info:hover .yr-tip,.yr-info:focus-visible .yr-tip,.yr-split:hover .yr-tip,.yr-split:focus-visible .yr-tip{opacity:1;visibility:visible;transform:translate(-50%,0)}
 .yr-tip span{display:flex;align-items:baseline;justify-content:space-between;gap:16px}
@@ -129,8 +129,8 @@ html{scroll-behavior:smooth}
 .yr-tip-split b{font-size:14px;letter-spacing:normal;text-transform:none;color:var(--ink);font-variant-numeric:tabular-nums}
 .yr-tip-foot{margin-top:2px;padding-top:8px;border-top:1px solid var(--line);color:var(--muted);font-size:12px}
 .yr-tip-foot a{color:var(--green);font-weight:650}
-.yr-tip-rewards{left:auto;right:-8px;transform:translate(0,4px)}
-.yr-info:hover .yr-tip-rewards,.yr-info:focus-visible .yr-tip-rewards{transform:translate(0,0)}
+.yr-tip-rewards{top:calc(100% + 10px);bottom:auto;left:auto;right:0;width:280px;max-width:86vw;transform:translate(0,-4px)}
+.yr-info:hover .yr-tip-rewards,.yr-info:focus-visible .yr-tip-rewards{transform:translate(0,0)}.yr-tip-rewards span{font-size:13px}.yr-tip-rewards b{margin-top:2px}.yr-tip-rewards b:first-child{margin-top:0}.yr-tip-link{display:block;margin-top:2px;padding-top:8px;border-top:1px solid var(--line);color:var(--green);font-size:12px;font-weight:650}.yr-tip-foot{display:block}
 .yr-row-gain{display:grid;justify-items:end;gap:1px;text-align:right}
 .yr-row-gain b{font-size:16px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
 .yr-row-gain small{color:var(--muted);font-size:9px;font-weight:750;letter-spacing:.1em;text-transform:uppercase}
