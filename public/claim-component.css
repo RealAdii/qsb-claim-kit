@@ -138,3 +138,5 @@ html{scroll-behavior:smooth}
 
 .yr-period:hover{background:#ffffff24;border-color:#ffffff6b;transform:translateY(-1px)}
 .yr-period:active{transform:none}
+
+.yr-row-prize span{color:var(--muted);font-size:12px;font-weight:500}

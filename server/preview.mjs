@@ -142,7 +142,7 @@ const server = createServer(async (req, res) => {
           promotions: solver.promotions ?? null,
           title: solver.title ?? null,
           team: team.has(solver.login.toLowerCase()),
-          prize: solver.prize ?? (solver.avatarId ? awarded.get(solver.avatarId) ?? null : null),
+          prize: team.has(solver.login.toLowerCase()) ? null : solver.prize ?? (solver.avatarId ? awarded.get(solver.avatarId) ?? null : null),
         });
         const byLogin = new Map(board.solvers.map((solver) => [solver.login.toLowerCase(), solver]));
         const head = (roster || []).map((solver) => ({ ...byLogin.get(solver.login.toLowerCase()), ...solver }));

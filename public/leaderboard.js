@@ -37,12 +37,12 @@ function winnerCell(solver, index) {
 }
 
 function row(solver, index) {
-  return `<li class="yr-row${index === 0 ? " is-lead" : ""}">
+  return `<li class="yr-row${index === 0 && !solver.team ? " is-lead" : ""}">
     <span class="yr-row-rank">${String(solver.rank).padStart(2, "0")}</span>
     ${solver.avatarId ? `<img class="yr-row-avatar" src="${avatarUrl(solver.avatarId, 64)}" alt="" width="32" height="32" loading="lazy">` : `<span class="yr-row-avatar"></span>`}
-    <span class="yr-row-name">${safe(solver.login)}${index === 0 ? crown : ""}${solver.team ? teamTag : ""}</span>
+    <span class="yr-row-name">${safe(solver.login)}${index === 0 && !solver.team ? crown : ""}${solver.team ? teamTag : ""}</span>
     <span class="yr-row-gain">${breakdown(solver)}<small>total gain</small></span>
-    <span class="yr-row-prize">${solver.prize ? money(solver.prize) : "<span>&mdash;</span>"}</span>
+    <span class="yr-row-prize">${solver.team ? "<span>Not eligible</span>" : solver.prize ? money(solver.prize) : "<span>&mdash;</span>"}</span>
   </li>`;
 }
 
@@ -50,9 +50,12 @@ try {
   const response = await fetch("/claim/api/qsb/leaderboard");
   if (!response.ok) throw new Error("unavailable");
   const board = await response.json();
-  const top = board.solvers.slice(0, 3);
-  const others = board.solvers.slice(3);
-  winners.innerHTML = `<header class="yr-winners-head"><h2>Weekly winners</h2><p class="yr-winners-range">Week 1 · Sep 8 to Sep 14, 2026</p></header>
+  // StarkWare accounts stay in the standings, with their real rank, but the
+  // winners panel only ever shows solvers who can actually be paid.
+  const eligible = board.solvers.filter((solver) => !solver.team);
+  const top = eligible.slice(0, 3);
+  const others = board.solvers;
+  winners.innerHTML = `<header class="yr-winners-head"><h2>Week 1 winners</h2><p class="yr-winners-range">Week 1 · Sep 8 to Sep 14, 2026</p></header>
     <div class="yr-winners-grid">${top.map(winnerCell).join("")}</div>`;
   rest.innerHTML = others.length
     ? `<div class="yr-rows-head"><span>Solver</span><span class="yr-rows-head-gain">Total gain</span><span>Reward</span></div><ol class="yr-rows">${others.map(row).join("")}</ol>`

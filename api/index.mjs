@@ -87,7 +87,7 @@ export default async function handler(req, res) {
         total: solver.total,
         promotions: solver.promotions,
         team: team.has(solver.login.toLowerCase()),
-        prize: solver.avatarId ? awarded.get(solver.avatarId) ?? null : null,
+        prize: team.has(solver.login.toLowerCase()) ? null : solver.avatarId ? awarded.get(solver.avatarId) ?? null : null,
       }));
       res.writeHead(200, { "Content-Type": "application/json", "Cache-Control": "no-store" });
       return res.end(JSON.stringify({ updatedAt: board.fetchedAt, stale: board.stale, workloads: board.workloads, solvers }));
