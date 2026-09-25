@@ -24,6 +24,7 @@ export default function QsbHero({ mediaBase = "/media", leaderboardUrl = "https:
             </a>
           </div>
           <div className="yr-top-right">
+            <a className="yr-navlink" href="https://quantum.starkware.co" target="_blank" rel="noreferrer">Know more about quantum</a>
             <a className="yr-navlink" href={leaderboardUrl}>Leaderboard</a>
             <details className="yr-help-menu">
               <summary className="yr-navlink">Need help?</summary>
