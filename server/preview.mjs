@@ -26,6 +26,7 @@ async function sendMedia(name, type, req, res) {
 const authMode = process.env.AUTH_MODE || "demo";
 let githubAuth, claimHandler, pool, appOrigin, devClaims, localOnly = false, prizes = async () => new Map();
 const { createLeaderboard, readRoster } = await import("./leaderboard.mjs");
+const { awardsFromStandings } = await import("./auto-awards.mjs");
 // Team accounts are shown but never paid, so the board can say so out loud.
 let team = new Map();
 try {
@@ -82,7 +83,10 @@ if (authMode === "github") {
     };
     getAward = async (githubId) => {
       const result = await pool.query("SELECT award_id AS \"awardId\", award_type AS type, award_label AS label, award_amount::float8 AS amount FROM yukon_reward_awards WHERE github_id=$1 AND finalized=true ORDER BY created_at,award_id LIMIT 1", [githubId]);
-      return result.rows[0] || null;
+      if (result.rows[0]) return result.rows[0];
+      const board = await leaderboard.get();
+      const decorated = { ...board, periods: Object.fromEntries(Object.entries(board.periods || {}).map(([name, period]) => [name, { ...period, solvers: period.solvers.map((solver) => ({ ...solver, team: team.get(solver.login.toLowerCase()) || null })) }])) };
+      return awardsFromStandings(decorated).get(String(githubId)) || null;
     };
   }
 

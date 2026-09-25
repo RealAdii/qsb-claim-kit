@@ -5,6 +5,7 @@ import { createGithubAuth, postgresAuthStore } from "../server/github-auth.mjs";
 import { createClaimHandler } from "../server/claim-handler.mjs";
 import { postgresStore } from "../server/store.mjs";
 import { createLeaderboard } from "../server/leaderboard.mjs";
+import { awardsFromStandings } from "../server/auto-awards.mjs";
 import { readFile } from "node:fs/promises";
 
 const required = ["APP_ORIGIN", "DATABASE_URL", "CLAIM_ENCRYPTION_KEY", "GITHUB_CLIENT_ID", "GITHUB_CLIENT_SECRET", "GITHUB_CALLBACK_URL"];
@@ -28,7 +29,10 @@ const claimHandler = createClaimHandler({
   origin, getSession: githubAuth.getSession,
   getAward: async (githubId) => {
     const result = await pool.query('SELECT award_id AS "awardId", award_type AS type, award_label AS label, award_amount::float8 AS amount FROM yukon_reward_awards WHERE github_id=$1 AND finalized=true ORDER BY created_at,award_id LIMIT 1', [githubId]);
-    return result.rows[0] || null;
+    if (result.rows[0]) return result.rows[0];
+    const [board, team] = await Promise.all([leaderboard.get(), teamAccounts()]);
+    const decorated = { ...board, periods: Object.fromEntries(Object.entries(board.periods || {}).map(([name, period]) => [name, { ...period, solvers: period.solvers.map((solver) => ({ ...solver, team: team.get(solver.login.toLowerCase()) || null })) }])) };
+    return awardsFromStandings(decorated).get(String(githubId)) || null;
   },
   store: postgresStore(pool),
 });

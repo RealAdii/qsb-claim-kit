@@ -67,3 +67,36 @@ test("the roster still pins named solvers", () => {
   assert.equal(roster[0].prize, 1000);
   assert.throws(() => readRoster("[]"), /non-empty/);
 });
+
+// Eligibility follows the same standings the board shows.
+import { awardsFromStandings } from "../server/auto-awards.mjs";
+
+const board = (until) => ({
+  periods: {
+    week1: {
+      range: { from: "2026-09-15T00:00:00Z", until },
+      solvers: [
+        { login: "teamPerson", avatarId: "1", team: "starkware" },
+        { login: "ada", avatarId: "2", team: null },
+        { login: "grace", avatarId: "3", team: null },
+        { login: "hopper", avatarId: "4", team: null },
+        { login: "lovelace", avatarId: "5", team: null },
+      ],
+    },
+  },
+});
+
+test("a closed period makes its top three claimable, skipping team accounts", () => {
+  const awards = awardsFromStandings(board("2026-09-24T00:00:00Z"), { now: Date.parse("2026-09-25T00:00:00Z") });
+  assert.equal(awards.get("1"), undefined, "team accounts never get an award");
+  assert.equal(awards.get("2").amount, 1000);
+  assert.equal(awards.get("2").label, "Week 1 first place");
+  assert.equal(awards.get("3").amount, 600);
+  assert.equal(awards.get("4").amount, 400);
+  assert.equal(awards.get("5"), undefined, "fourth place is not paid");
+});
+
+test("a period that is still running grants nothing", () => {
+  const awards = awardsFromStandings(board("2026-10-08T00:00:00Z"), { now: Date.parse("2026-09-25T00:00:00Z") });
+  assert.equal(awards.size, 0);
+});
