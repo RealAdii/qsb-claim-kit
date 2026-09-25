@@ -12,7 +12,14 @@ await mountAccount();
 
 const crown = '<svg class="yr-crown" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 7.5 7 11l5-6.5L17 11l4-3.5V18a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7.5Z"/></svg>';
 const titles = ["Champion", "2nd place", "3rd place"];
-const teamTag = '<span class="yr-team" tabindex="0" role="note" aria-label="StarkWare member. StarkWare members are not eligible for the rewards."><img src="/claim/media/favicon.svg" alt="" width="16" height="16"><span class="yr-tip">StarkWare members are not eligible for the rewards.</span></span>';
+const ORGS = {
+  starkware: { name: "StarkWare", mark: "/claim/media/favicon.svg" },
+  eigenlabs: { name: "Eigen Labs", mark: "/claim/media/eigenlabs.png" },
+};
+const teamTag = (org) => {
+  const { name, mark } = ORGS[org] || ORGS.starkware;
+  return `<span class="yr-team" tabindex="0" role="note" aria-label="${name} member. ${name} members are not eligible for the rewards."><img src="${mark}" alt="" width="16" height="16"><span class="yr-tip">${name} members are not eligible for the rewards.</span></span>`;
+};
 
 function breakdown(solver) {
   return `<span class="yr-split" tabindex="0" role="note" aria-label="Pinning ${pct(solver.gains.pinning)}, subset ${pct(solver.gains.subset)}, from ${solver.promotions} promoted submissions.">
@@ -30,7 +37,7 @@ function winnerCell(solver, index) {
     ${solver.avatarId ? `<img class="yr-winner-avatar" src="${avatarUrl(solver.avatarId, 96)}" alt="" width="46" height="46" loading="lazy">` : `<span class="yr-winner-avatar"></span>`}
     <div class="yr-winner-body">
       <p class="yr-winner-title">${index === 0 ? crown : ""}${safe(solver.title || titles[index] || "")}</p>
-      <p class="yr-winner-name">${safe(solver.login)}${solver.team ? teamTag : ""}</p>
+      <p class="yr-winner-name">${safe(solver.login)}${solver.team ? teamTag(solver.team) : ""}</p>
       <p class="yr-winner-meta">${solver.prize ? money(solver.prize) : "To be announced"} <span>·</span> ${pct(solver.total)} gain</p>
     </div>
   </article>`;
@@ -41,7 +48,7 @@ function row(solver, index) {
   return `<li class="yr-row${index === 0 && !solver.team ? " is-lead" : ""}">
     <span class="yr-row-rank">${String(solver.rank).padStart(2, "0")}</span>
     ${solver.avatarId ? `<img class="yr-row-avatar" src="${avatarUrl(solver.avatarId, 64)}" alt="" width="32" height="32" loading="lazy">` : `<span class="yr-row-avatar"></span>`}
-    <span class="yr-row-name">${safe(solver.login)}${place}${solver.team ? teamTag : ""}</span>
+    <span class="yr-row-name">${safe(solver.login)}${place}${solver.team ? teamTag(solver.team) : ""}</span>
     <span class="yr-row-gain">${breakdown(solver)}<small>total gain</small></span>
     <span class="yr-row-prize">${solver.team ? "<span>Not eligible</span>" : solver.prize ? money(solver.prize) : "<span>&mdash;</span>"}</span>
   </li>`;

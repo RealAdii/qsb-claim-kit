@@ -37,8 +37,12 @@ const claimHandler = createClaimHandler({
 let teamCache = null;
 async function teamAccounts() {
   if (teamCache) return teamCache;
-  try { teamCache = new Set(JSON.parse(await readFile(new URL("../team.json", import.meta.url), "utf8")).map((login) => login.toLowerCase())); }
-  catch { teamCache = new Set(); }
+  try {
+    const parsed = JSON.parse(await readFile(new URL("../team.json", import.meta.url), "utf8"));
+    const groups = Array.isArray(parsed) ? { starkware: parsed } : parsed;
+    teamCache = new Map();
+    for (const [org, logins] of Object.entries(groups)) for (const login of logins) teamCache.set(login.toLowerCase(), org);
+  } catch { teamCache = new Map(); }
   return teamCache;
 }
 
@@ -86,7 +90,7 @@ export default async function handler(req, res) {
         gains: solver.gains,
         total: solver.total,
         promotions: solver.promotions,
-        team: team.has(solver.login.toLowerCase()),
+        team: team.get(solver.login.toLowerCase()) || null,
         prize: team.has(solver.login.toLowerCase()) ? null : solver.avatarId ? awarded.get(solver.avatarId) ?? null : null,
       });
       const periods = Object.fromEntries(Object.entries(board.periods || {}).map(([name, period]) => [name, { workloads: period.workloads, range: period.range, solvers: period.solvers.map(decorate) }]));

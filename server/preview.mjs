@@ -10,7 +10,7 @@ const files = new Map([
 const types = { html: "text/html; charset=utf-8", css: "text/css; charset=utf-8", js: "text/javascript; charset=utf-8" };
 // Hero media is served with byte ranges. Safari asks for bytes 0-1 first and
 // refuses to play a video from a server that answers 200 with the whole file.
-const media = new Map([["/claim/media/hero.mp4", ["hero.mp4", "video/mp4"]], ["/claim/media/hero-poster.jpg", ["hero-poster.jpg", "image/jpeg"]], ["/claim/media/card-loop.mp4", ["card-loop.mp4", "video/mp4"]], ["/claim/media/card-loop.jpg", ["card-loop.jpg", "image/jpeg"]], ["/claim/media/rewards-bg.mp4", ["rewards-bg.mp4", "video/mp4"]], ["/claim/media/rewards-bg.jpg", ["rewards-bg.jpg", "image/jpeg"]], ["/claim/media/podium-bg.mp4", ["podium-bg.mp4", "video/mp4"]], ["/claim/media/podium-bg.jpg", ["podium-bg.jpg", "image/jpeg"]], ["/claim/media/board-bg.mp4", ["board-bg.mp4", "video/mp4"]], ["/claim/media/board-bg.jpg", ["board-bg.jpg", "image/jpeg"]], ["/claim/media/favicon.svg", ["favicon.svg", "image/svg+xml"]], ["/claim/media/starkware-logo.svg", ["starkware-logo.svg", "image/svg+xml"]], ["/claim/media/starkware-logo-white.svg", ["starkware-logo-white.svg", "image/svg+xml"]]]);
+const media = new Map([["/claim/media/hero.mp4", ["hero.mp4", "video/mp4"]], ["/claim/media/hero-poster.jpg", ["hero-poster.jpg", "image/jpeg"]], ["/claim/media/card-loop.mp4", ["card-loop.mp4", "video/mp4"]], ["/claim/media/card-loop.jpg", ["card-loop.jpg", "image/jpeg"]], ["/claim/media/rewards-bg.mp4", ["rewards-bg.mp4", "video/mp4"]], ["/claim/media/rewards-bg.jpg", ["rewards-bg.jpg", "image/jpeg"]], ["/claim/media/podium-bg.mp4", ["podium-bg.mp4", "video/mp4"]], ["/claim/media/podium-bg.jpg", ["podium-bg.jpg", "image/jpeg"]], ["/claim/media/board-bg.mp4", ["board-bg.mp4", "video/mp4"]], ["/claim/media/board-bg.jpg", ["board-bg.jpg", "image/jpeg"]], ["/claim/media/favicon.svg", ["favicon.svg", "image/svg+xml"]], ["/claim/media/eigenlabs.png", ["eigenlabs.png", "image/png"]], ["/claim/media/starkware-logo.svg", ["starkware-logo.svg", "image/svg+xml"]], ["/claim/media/starkware-logo-white.svg", ["starkware-logo-white.svg", "image/svg+xml"]]]);
 async function sendMedia(name, type, req, res) {
   const path = new URL(`../public/media/${name}`, import.meta.url);
   const { size } = await stat(path);
@@ -27,9 +27,12 @@ const authMode = process.env.AUTH_MODE || "demo";
 let githubAuth, claimHandler, pool, appOrigin, devClaims, localOnly = false, prizes = async () => new Map();
 const { createLeaderboard, readRoster } = await import("./leaderboard.mjs");
 // Team accounts are shown but never paid, so the board can say so out loud.
-let team = new Set();
-try { team = new Set(JSON.parse(await readFile(new URL("../team.json", import.meta.url), "utf8")).map((login) => login.toLowerCase())); }
-catch (error) { if (error.code !== "ENOENT") throw error; }
+let team = new Map();
+try {
+  const parsed = JSON.parse(await readFile(new URL("../team.json", import.meta.url), "utf8"));
+  const groups = Array.isArray(parsed) ? { starkware: parsed } : parsed;
+  for (const [org, logins] of Object.entries(groups)) for (const login of logins) team.set(login.toLowerCase(), org);
+} catch (error) { if (error.code !== "ENOENT") throw error; }
 const leaderboard = createLeaderboard();
 const rosterFile = new URL(`../${process.env.BOARD_ROSTER_FILE || "board-solvers.json"}`, import.meta.url);
 let roster = null;
@@ -139,7 +142,7 @@ const server = createServer(async (req, res) => {
           gains: solver.gains,
           total: solver.total,
           promotions: solver.promotions,
-          team: team.has(solver.login.toLowerCase()),
+          team: team.get(solver.login.toLowerCase()) || null,
           prize: team.has(solver.login.toLowerCase()) ? null : solver.avatarId ? awarded.get(solver.avatarId) ?? null : null,
         });
         const periods = Object.fromEntries(Object.entries(board.periods || {}).map(([name, period]) => [name, { workloads: period.workloads, range: period.range, solvers: period.solvers.map(decorate) }]));
