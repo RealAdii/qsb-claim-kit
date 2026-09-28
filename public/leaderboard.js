@@ -82,7 +82,7 @@ function render(board, active) {
   const eligible = solvers.filter((solver) => !solver.team);
   const top = eligible.slice(0, 3);
   const tabs = PERIODS.map(({ key, label, pool }) =>
-    `<button type="button" class="yr-period-tab${key === active ? " is-active" : ""}" data-period="${key}" aria-pressed="${key === active}">${label}<span>${pool}</span><small>${range(board.periods?.[key])}</small></button>`).join("");
+    `<button type="button" class="yr-period-tab${key === active ? " is-active" : ""}" data-period="${key}" aria-pressed="${key === active}">${label}<span>${pool}</span><small>${range(board.periods?.[key])}${key === "week1" ? " · Past" : " · Current"}</small></button>`).join("");
   const heading = PERIODS.find((p) => p.key === active).label;
   winners.innerHTML = `<div class="yr-period-tabs" role="group" aria-label="Reward period">${tabs}</div>
     <header class="yr-winners-head"><h2>${heading} winners</h2><p class="yr-winners-range">${range(period)}${range(period) ? " · " : ""}${active === "week1" ? "Closed" : "Still running"}</p></header>
@@ -104,7 +104,7 @@ try {
   const response = await fetch("/claim/api/qsb/leaderboard");
   if (!response.ok) throw new Error("unavailable");
   const board = await response.json();
-  render(board, "week1");
+  render(board, "weeks23");
 } catch {
   note.textContent = "The leaderboard is unavailable right now. Please refresh to try again.";
 }
