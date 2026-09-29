@@ -59,6 +59,21 @@ Redeploy the hub. That is the whole task.
    `APP_NAME="..." CALLBACK_ORIGIN="https://your-origin" node server/setup-github-app.mjs`,
    which creates it from a manifest in one click and writes the credentials.
 
+## Scheduled refresh
+
+A Vercel cron (`*/30 * * * *`, defined in `vercel.json`) calls
+`/claim/api/cron/refresh` with `Authorization: Bearer $CRON_SECRET`. The route
+recomputes the standings from Yukon's API and stores them in
+`qsb_leaderboard_snapshots`; the leaderboard reads that snapshot, so visitors
+never wait on Yukon. A snapshot older than 45 minutes triggers a live recompute;
+if that fails, the last snapshot is served and marked stale. Yukon's submission
+endpoints are tens of megabytes and 502 intermittently, which is why reads are
+retried and the function is allowed 120 seconds. To refresh by hand:
+
+```bash
+curl -H "Authorization: Bearer $CRON_SECRET" https://quantum.starkware.co/claim/api/cron/refresh
+```
+
 ## Environment variables
 
 | Name | What it is |
@@ -68,6 +83,7 @@ Redeploy the hub. That is the whole task.
 | `GITHUB_CLIENT_ID` | The GitHub App's client id. |
 | `GITHUB_CLIENT_SECRET` | The GitHub App's client secret. Rotate it in the app settings if it is ever exposed. |
 | `CLAIM_ENCRYPTION_KEY` | 32 bytes of hex, `openssl rand -hex 32`. Encrypts claim details at rest. **Changing it makes existing claims unreadable.** |
+| `CRON_SECRET` | Random string; Vercel sends it on scheduled calls, and nothing else may call the refresh route. |
 | `DATABASE_URL` | PostgreSQL connection string. Supplied automatically if you attach Neon through the Vercel integration. |
 | `GOOGLE_SHEET_ID`, `GOOGLE_SHEET_TAB`, `GOOGLE_APPLICATION_CREDENTIALS` | Only for the Sheets delivery worker, `server/sync-sheets.mjs`. Not needed to run the page. |
 
