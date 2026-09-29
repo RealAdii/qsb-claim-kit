@@ -56,10 +56,20 @@ export function rank(solvers) {
     .map((row, index) => ({ ...row, rank: index + 1 }));
 }
 
-async function readJson(url, fetchImpl) {
-  const response = await fetchImpl(url, { headers: { Accept: "application/json", "User-Agent": "Yukon-QSB-Rewards" }, signal: AbortSignal.timeout(20000) });
-  if (!response.ok) throw new Error(`${url} returned ${response.status}`);
-  return response.json();
+// Yukon's submissions endpoints are large and answer 502 intermittently, so a
+// read is retried a few times with a short pause before it counts as failed.
+async function readJson(url, fetchImpl, attempts = 4) {
+  let lastError;
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      const response = await fetchImpl(url, { headers: { Accept: "application/json", "User-Agent": "Yukon-QSB-Rewards" }, signal: AbortSignal.timeout(45000) });
+      if (response.ok) return response.json();
+      lastError = new Error(`${url} returned ${response.status}`);
+      if (response.status < 500) break;
+    } catch (error) { lastError = error; }
+    if (attempt < attempts) await new Promise((resolve) => setTimeout(resolve, 1500 * attempt));
+  }
+  throw lastError;
 }
 
 export async function loadStandings(fetchImpl = fetch) {

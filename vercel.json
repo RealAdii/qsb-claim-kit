@@ -70,5 +70,10 @@
       "path": "/claim/api/cron/refresh",
       "schedule": "*/30 * * * *"
     }
-  ]
+  ],
+  "functions": {
+    "api/index.mjs": {
+      "maxDuration": 120
+    }
+  }
 }
