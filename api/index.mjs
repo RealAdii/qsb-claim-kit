@@ -4,7 +4,8 @@ import pg from "pg";
 import { createGithubAuth, postgresAuthStore } from "../server/github-auth.mjs";
 import { createClaimHandler } from "../server/claim-handler.mjs";
 import { postgresStore } from "../server/store.mjs";
-import { createLeaderboard } from "../server/leaderboard.mjs";
+import { loadStandings } from "../server/leaderboard.mjs";
+import { createSnapshotBoard } from "../server/snapshots.mjs";
 import { awardsFromStandings } from "../server/auto-awards.mjs";
 import { readFile } from "node:fs/promises";
 
@@ -18,7 +19,7 @@ if (callback.origin !== origin || callback.pathname !== "/claim/auth/github/call
 
 // One pool per warm instance, small because many instances may exist at once.
 const pool = globalThis.__qsbPool ?? (globalThis.__qsbPool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 3, idleTimeoutMillis: 10000 }));
-const leaderboard = globalThis.__qsbBoard ?? (globalThis.__qsbBoard = createLeaderboard());
+const leaderboard = globalThis.__qsbBoard ?? (globalThis.__qsbBoard = createSnapshotBoard({ pool, compute: () => loadStandings() }));
 
 const githubAuth = createGithubAuth({
   origin, callbackUrl: callback.href,
@@ -84,6 +85,14 @@ export default async function handler(req, res) {
       res.statusCode = 404; return res.end("Not found");
     }
     if (url.pathname === "/claim/api/yukon/reward-claim") return send(await claimHandler(await toRequest(req)), res);
+    if (url.pathname === "/claim/api/cron/refresh") {
+      const expected = process.env.CRON_SECRET;
+      if (!expected || req.headers.authorization !== `Bearer ${expected}`) { res.writeHead(401, { "Content-Type": "application/json" }); return res.end(JSON.stringify({ error: "Unauthorized" })); }
+      const started = Date.now();
+      const board = await leaderboard.refresh();
+      res.writeHead(200, { "Content-Type": "application/json", "Cache-Control": "no-store" });
+      return res.end(JSON.stringify({ ok: true, solvers: board.solvers.length, fetchedAt: board.fetchedAt, tookMs: Date.now() - started, pinning: board.workloads.pinning.improvement, subset: board.workloads.subset.improvement }));
+    }
     if (url.pathname === "/claim/api/qsb/leaderboard") {
       const [board, awarded] = await Promise.all([leaderboard.get(), prizes()]);
       const team = await teamAccounts();
@@ -99,7 +108,7 @@ export default async function handler(req, res) {
       });
       const periods = Object.fromEntries(Object.entries(board.periods || {}).map(([name, period]) => [name, { workloads: period.workloads, range: period.range, solvers: period.solvers.map(decorate) }]));
       res.writeHead(200, { "Content-Type": "application/json", "Cache-Control": "no-store" });
-      return res.end(JSON.stringify({ updatedAt: board.fetchedAt, stale: board.stale, week1End: board.week1End, workloads: board.workloads, periods, solvers: board.solvers.map(decorate) }));
+      return res.end(JSON.stringify({ updatedAt: board.fetchedAt, stale: board.stale, source: board.source, week1End: board.week1End, workloads: board.workloads, periods, solvers: board.solvers.map(decorate) }));
     }
     res.statusCode = 404; res.end("Not found");
   } catch {

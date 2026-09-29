@@ -44,6 +44,10 @@
     {
       "source": "/claim/api/qsb/leaderboard",
       "destination": "/api/index"
+    },
+    {
+      "source": "/claim/api/cron/refresh",
+      "destination": "/api/index"
     }
   ],
   "headers": [
@@ -59,6 +63,12 @@
           "value": "default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self' https://avatars.githubusercontent.com; frame-ancestors 'none'; form-action 'self'"
         }
       ]
+    }
+  ],
+  "crons": [
+    {
+      "path": "/claim/api/cron/refresh",
+      "schedule": "*/30 * * * *"
     }
   ]
 }

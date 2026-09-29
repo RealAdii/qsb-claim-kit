@@ -34,3 +34,11 @@ CREATE TABLE IF NOT EXISTS yukon_reward_awards (
   created_at timestamptz NOT NULL DEFAULT now(),
   PRIMARY KEY (github_id, award_id)
 );
+
+-- Leaderboard standings, computed on a schedule so every reader sees one copy.
+CREATE TABLE IF NOT EXISTS qsb_leaderboard_snapshots (
+  id bigserial PRIMARY KEY,
+  payload jsonb NOT NULL,
+  fetched_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS qsb_leaderboard_snapshots_time_idx ON qsb_leaderboard_snapshots (fetched_at DESC);
