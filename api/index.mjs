@@ -6,7 +6,7 @@ import { createClaimHandler } from "../server/claim-handler.mjs";
 import { postgresStore } from "../server/store.mjs";
 import { loadStandings } from "../server/leaderboard.mjs";
 import { createSnapshotBoard } from "../server/snapshots.mjs";
-import { awardsFromStandings } from "../server/auto-awards.mjs";
+import { awardsFromStandings, raffleFromStandings, combineAwards } from "../server/auto-awards.mjs";
 import { readFile } from "node:fs/promises";
 
 const required = ["APP_ORIGIN", "DATABASE_URL", "CLAIM_ENCRYPTION_KEY", "GITHUB_CLIENT_ID", "GITHUB_CLIENT_SECRET", "GITHUB_CALLBACK_URL"];
@@ -29,11 +29,9 @@ const githubAuth = createGithubAuth({
 const claimHandler = createClaimHandler({
   origin, getSession: githubAuth.getSession,
   getAward: async (githubId) => {
-    const result = await pool.query('SELECT award_id AS "awardId", award_type AS type, award_label AS label, award_amount::float8 AS amount FROM yukon_reward_awards WHERE github_id=$1 AND finalized=true ORDER BY created_at,award_id LIMIT 1', [githubId]);
-    if (result.rows[0]) return result.rows[0];
-    const [board, team] = await Promise.all([leaderboard.get(), teamAccounts()]);
-    const decorated = { ...board, periods: Object.fromEntries(Object.entries(board.periods || {}).map(([name, period]) => [name, { ...period, solvers: period.solvers.map((solver) => ({ ...solver, team: team.get(solver.login.toLowerCase()) || null })) }])) };
-    return awardsFromStandings(decorated).get(String(githubId)) || null;
+    const result = await pool.query('SELECT award_id AS "awardId", award_type AS type, award_label AS label, award_amount::float8 AS amount FROM yukon_reward_awards WHERE github_id=$1 AND finalized=true ORDER BY created_at,award_id', [githubId]);
+    if (result.rows.length) return combineAwards(result.rows);
+    return awardsFromStandings(await decoratedBoard()).get(String(githubId)) || null;
   },
   store: postgresStore(pool),
 });
@@ -49,6 +47,14 @@ async function teamAccounts() {
     for (const [org, logins] of Object.entries(groups)) for (const login of logins) teamCache.set(login.toLowerCase(), org);
   } catch { teamCache = new Map(); }
   return teamCache;
+}
+
+// The board with team membership attached, which both eligibility and the
+// board API need.
+async function decoratedBoard() {
+  const [board, team] = await Promise.all([leaderboard.get(), teamAccounts()]);
+  const tag = (solver) => ({ ...solver, team: team.get(solver.login.toLowerCase()) || null });
+  return { ...board, solvers: board.solvers.map(tag), periods: Object.fromEntries(Object.entries(board.periods || {}).map(([name, period]) => [name, { ...period, solvers: period.solvers.map(tag) }])) };
 }
 
 async function prizes() {
@@ -94,8 +100,9 @@ export default async function handler(req, res) {
       return res.end(JSON.stringify({ ok: true, solvers: board.solvers.length, fetchedAt: board.fetchedAt, tookMs: Date.now() - started, pinning: board.workloads.pinning.improvement, subset: board.workloads.subset.improvement }));
     }
     if (url.pathname === "/claim/api/qsb/leaderboard") {
-      const [board, awarded] = await Promise.all([leaderboard.get(), prizes()]);
-      const team = await teamAccounts();
+      const [board, awarded] = await Promise.all([decoratedBoard(), prizes()]);
+      const automatic = awardsFromStandings(board);
+      const raffle = raffleFromStandings(board);
       const decorate = (solver, index) => ({
         rank: index + 1,
         login: solver.login,
@@ -103,12 +110,14 @@ export default async function handler(req, res) {
         gains: solver.gains,
         total: solver.total,
         promotions: solver.promotions,
-        team: team.get(solver.login.toLowerCase()) || null,
-        prize: team.has(solver.login.toLowerCase()) ? null : solver.avatarId ? awarded.get(solver.avatarId) ?? null : null,
+        team: solver.team,
+        prize: solver.team || !solver.avatarId ? null : awarded.get(solver.avatarId) ?? automatic.get(String(solver.avatarId))?.amount ?? null,
+        raffle: !solver.team && solver.avatarId && raffle.qualifiers.some((q) => q.avatarId === String(solver.avatarId)) ? raffle.share : null,
       });
       const periods = Object.fromEntries(Object.entries(board.periods || {}).map(([name, period]) => [name, { workloads: period.workloads, range: period.range, solvers: period.solvers.map(decorate) }]));
+      const { qualifiers, ...raffleSummary } = raffle;
       res.writeHead(200, { "Content-Type": "application/json", "Cache-Control": "no-store" });
-      return res.end(JSON.stringify({ updatedAt: board.fetchedAt, stale: board.stale, source: board.source, week1End: board.week1End, workloads: board.workloads, periods, solvers: board.solvers.map(decorate) }));
+      return res.end(JSON.stringify({ updatedAt: board.fetchedAt, stale: board.stale, source: board.source, week1End: board.week1End, workloads: board.workloads, raffle: raffleSummary, periods, solvers: board.solvers.map(decorate) }));
     }
     res.statusCode = 404; res.end("Not found");
   } catch {

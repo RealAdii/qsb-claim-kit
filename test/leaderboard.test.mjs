@@ -100,3 +100,50 @@ test("a period that is still running grants nothing", () => {
   const awards = awardsFromStandings(board("2026-10-08T00:00:00Z"), { now: Date.parse("2026-09-25T00:00:00Z") });
   assert.equal(awards.size, 0);
 });
+
+// The raffle opens with the last period and is shared equally by everyone
+// above the threshold, and a solver with two awards gets one combined claim.
+import { raffleFromStandings, combineAwards } from "../server/auto-awards.mjs";
+
+const fullBoard = (until) => ({
+  periods: {
+    week1: { range: { from: "2026-09-15T00:00:00Z", until: "2026-09-24T00:00:00Z" }, solvers: [{ login: "ada", avatarId: "2", team: null, total: 70 }] },
+    weeks23: { range: { from: "2026-09-24T00:00:00Z", until }, solvers: [{ login: "grace", avatarId: "3", team: null, total: 10 }, { login: "ada", avatarId: "2", team: null, total: 5 }] },
+    all: { range: { from: "2026-09-15T00:00:00Z", until }, solvers: [
+      { login: "teamPerson", avatarId: "1", team: "starkware", total: 500 },
+      { login: "ada", avatarId: "2", team: null, total: 75 },
+      { login: "grace", avatarId: "3", team: null, total: 10 },
+      { login: "hopper", avatarId: "4", team: null, total: 3 },
+      { login: "lovelace", avatarId: "5", team: null, total: 2.99 },
+    ] },
+  },
+});
+
+test("the raffle is shared equally by every non-team solver at 3 percent or more once the challenge closes", () => {
+  const now = Date.parse("2026-10-09T00:00:00Z");
+  const raffle = raffleFromStandings(fullBoard("2026-10-08T00:00:00Z"), { now });
+  assert.equal(raffle.open, true);
+  assert.deepEqual(raffle.qualifiers.map((q) => q.login), ["ada", "grace", "hopper"]);
+  assert.equal(raffle.share, 2000);
+  assert.equal(raffleFromStandings(fullBoard("2026-10-08T00:00:00Z"), { now: Date.parse("2026-10-01T00:00:00Z") }).open, false, "nothing before the last period closes");
+});
+
+test("a podium winner who also qualifies for the raffle gets one combined claim under the podium award id", () => {
+  const awards = awardsFromStandings(fullBoard("2026-10-08T00:00:00Z"), { now: Date.parse("2026-10-09T00:00:00Z") });
+  const ada = awards.get("2");
+  assert.equal(ada.awardId, "week1-1");
+  assert.equal(ada.amount, 1000 + 3600 + 2000, "Week 1 first, Weeks 2 and 3 second, and a raffle share");
+  assert.equal(ada.parts.length, 3);
+  assert.match(ada.label, /Week 1 first place plus .*Raffle share/);
+  assert.equal(awards.get("4").awardId, "raffle");
+  assert.equal(awards.get("4").amount, 2000);
+  assert.equal(awards.get("5"), undefined, "2.99 percent does not qualify");
+  assert.equal(awards.get("1"), undefined, "team accounts never qualify");
+});
+
+test("combineAwards keeps the first award id and adds the amounts", () => {
+  const combined = combineAwards([{ awardId: "weeks23-1", type: "weeks23", label: "Weeks 2 and 3 first place", amount: 6000 }, { awardId: "raffle", type: "raffle", label: "Raffle share", amount: 272.73 }]);
+  assert.equal(combined.awardId, "weeks23-1");
+  assert.equal(combined.amount, 6272.73);
+  assert.equal(combineAwards([]), null);
+});

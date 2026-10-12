@@ -10,6 +10,10 @@
       "destination": "/index.html"
     },
     {
+      "source": "/claim/winners",
+      "destination": "/leaderboard.html"
+    },
+    {
       "source": "/claim/leaderboard",
       "destination": "/leaderboard.html"
     },

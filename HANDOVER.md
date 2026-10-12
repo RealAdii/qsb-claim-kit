@@ -105,3 +105,17 @@ answers a range request with 200 and the whole file.
 `npm test` covers the OAuth flow, the claim validation and storage, the award
 loader, the leaderboard parser and that every asset each page references
 resolves from every route the page is served at.
+
+## Raffle and the winners page
+
+The $6,000 raffle is paid automatically, not drawn: once Weeks 2 and 3 close,
+every solver who is not on a team and whose whole-challenge total gain is at
+least 3 percent gets an equal share (`RAFFLE` in `server/auto-awards.mjs`,
+share floored to the cent). An account with more than one award, for example
+a podium place plus a raffle share, gets one combined claim under the podium
+award id, so a claim already filed stays valid. Finalized database rows for
+one account are combined the same way.
+
+The board page is served at `/claim/winners` (and still at
+`/claim/leaderboard`). It shows the period winners, a "Raffle winners" panel
+and the standings, where the reward column adds place prize and raffle share.

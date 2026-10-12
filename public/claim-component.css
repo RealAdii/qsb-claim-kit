@@ -60,6 +60,16 @@
 .yr-winner-name{margin:3px 0 0;font-size:18px;font-weight:600;letter-spacing:-.02em;overflow-wrap:anywhere}
 .yr-winner-meta{margin:3px 0 0;color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums}
 .yr-winner-meta span{opacity:.6}
+.yr-raffle-grid{display:grid;grid-template-columns:repeat(4,1fr)}
+.yr-raffle-cell{padding:16px 18px;border-bottom:1px solid var(--line)}
+.yr-raffle-cell:nth-child(3n){border-right:1px solid var(--line)}
+.yr-raffle-cell:nth-child(4n){border-right:0}
+.yr-raffle-cell:nth-last-child(-n+4){border-bottom:0}
+.yr-raffle-cell .yr-winner-avatar{flex-basis:40px;width:40px;height:40px;border-radius:12px}
+.yr-raffle-cell .yr-winner-name{font-size:15px;letter-spacing:-.03em}
+.yr-raffle-tag{background:#fff3dc;color:#8a5a12}
+@media(max-width:1080px){.yr-raffle-grid{grid-template-columns:repeat(2,1fr)}.yr-raffle-cell:nth-child(3n){border-right:0}.yr-raffle-cell:nth-child(odd){border-right:1px solid var(--line)}.yr-raffle-cell:nth-last-child(-n+4){border-bottom:1px solid var(--line)}.yr-raffle-cell:nth-last-child(-n+2){border-bottom:0}}
+@media(max-width:640px){.yr-raffle-grid{grid-template-columns:1fr}.yr-raffle-cell{border-right:0!important;border-bottom:1px solid var(--line)!important}.yr-raffle-cell:last-child{border-bottom:0!important}}
 .yr-standings{display:grid;gap:14px}
 .yr-standings h2{margin:0;font-size:22px;letter-spacing:-.03em}
 .yr-rows-head{display:flex;align-items:center;gap:14px;justify-content:space-between;padding:11px 18px;border-radius:10px 10px 0 0;background:var(--hero);color:#fff;font-size:11px;font-weight:750;letter-spacing:.14em;text-transform:uppercase}

@@ -1,3 +1,4 @@
+import { combineAwards } from "./auto-awards.mjs";
 // Development-only adapters. Everything lives in this process, so the real
 // GitHub OAuth round trip can be exercised without PostgreSQL. Never select
 // these in staging or production: restarting the server erases every session,
@@ -50,7 +51,7 @@ export function memoryAwardTable(rows = []) {
   const awards = rows.map(normalizeAward);
   return {
     async getAward(githubId) {
-      return awards.find((award) => award.githubId === String(githubId) && award.finalized) || null;
+      return combineAwards(awards.filter((award) => award.githubId === String(githubId) && award.finalized));
     },
     all: () => awards.map((award) => ({ ...award })),
   };

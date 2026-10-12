@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#262d36">
-  <title>QSB rewards leaderboard</title>
+  <title>QSB rewards winners</title>
   <link rel="icon" href="/claim/media/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/claim/claim-component.css">
 </head>
@@ -19,8 +19,8 @@
     <section class="yr-claim-card">
       <div class="yr-board-head">
         <div class="yr-board-badges">
-          <p class="yr-board-badge">Week 1 winners only</p>
-          <span class="yr-info" tabindex="0" role="note" aria-label="Week 1 pays $1,000, $600 and $400. Weeks 2 and 3 pay $6,000, $3,600 and $2,400, plus a $6,000 raffle shared between 40 randomly drawn solvers at 3 percent improvement or better.">
+          <p class="yr-board-badge">Final results</p>
+          <span class="yr-info" tabindex="0" role="note" aria-label="Week 1 pays $1,000, $600 and $400. Weeks 2 and 3 pay $6,000, $3,600 and $2,400, plus a $6,000 raffle shared equally by every solver at 3 percent improvement or better.">
             <span aria-hidden="true">i</span>
             <span class="yr-tip yr-tip-rewards">
               <b>Week 1 · $2,000</b>
@@ -28,20 +28,21 @@
               <b>Weeks 2 and 3 · $18,000</b>
               <span><i>1st</i><em>$6,000</em></span><span><i>2nd</i><em>$3,600</em></span><span><i>3rd</i><em>$2,400</em></span>
               <span><i>Raffle</i><em>$6,000</em></span>
-              <span class="yr-tip-foot">Shared between 40 randomly drawn solvers at 3 percent improvement or better.</span><a class="yr-tip-link" href="/claim#rewards">See the full breakdown</a>
+              <span class="yr-tip-foot">Shared equally by every solver at 3 percent improvement or better over the whole challenge.</span><a class="yr-tip-link" href="/claim#rewards">See the full breakdown</a>
             </span>
           </span>
         </div>
         <h1>Who is getting paid</h1>
       </div>
-      <section id="yr-winners" class="yr-winners" aria-label="Weekly winners"></section>
+      <section id="yr-winners" class="yr-winners" aria-label="Period winners"></section>
+      <section id="yr-raffle" class="yr-winners yr-raffle" aria-label="Raffle winners"></section>
       <section class="yr-standings">
-        <h2>Weekly standings</h2>
+        <h2>Standings</h2>
         <div id="yr-rest" class="yr-rest"></div>
       </section>
       <p id="yr-board-note" class="yr-board-note"></p>
     </section>
   </main>
-  <script type="module" src="/claim/leaderboard.js?v=2"></script>
+  <script type="module" src="/claim/leaderboard.js?v=3"></script>
 </body>
 </html>

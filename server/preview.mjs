@@ -5,6 +5,7 @@ import { createReadStream } from "node:fs";
 const files = new Map([
   ["/", "index.html"], ["/index.html", "index.html"], ["/claim", "index.html"], ["/claim/", "index.html"],
   ["/claim/claim-component.css", "claim-component.css"], ["/claim/claim.js", "claim.js"], ["/claim/demo.js", "demo.js"], ["/claim/live.js", "live.js"],
+  ["/claim/winners", "leaderboard.html"], ["/claim/winners/", "leaderboard.html"],
   ["/claim/leaderboard", "leaderboard.html"], ["/claim/leaderboard/", "leaderboard.html"], ["/claim/leaderboard.js", "leaderboard.js"],
 ]);
 const types = { html: "text/html; charset=utf-8", css: "text/css; charset=utf-8", js: "text/javascript; charset=utf-8" };
@@ -26,7 +27,7 @@ async function sendMedia(name, type, req, res) {
 const authMode = process.env.AUTH_MODE || "demo";
 let githubAuth, claimHandler, pool, appOrigin, devClaims, localOnly = false, prizes = async () => new Map();
 const { createLeaderboard, readRoster } = await import("./leaderboard.mjs");
-const { awardsFromStandings } = await import("./auto-awards.mjs");
+const { awardsFromStandings, raffleFromStandings, combineAwards } = await import("./auto-awards.mjs");
 // Team accounts are shown but never paid, so the board can say so out loud.
 let team = new Map();
 try {
@@ -35,6 +36,13 @@ try {
   for (const [org, logins] of Object.entries(groups)) for (const login of logins) team.set(login.toLowerCase(), org);
 } catch (error) { if (error.code !== "ENOENT") throw error; }
 const leaderboard = createLeaderboard();
+// The board with team membership attached, which both eligibility and the
+// board API need.
+async function decoratedBoard() {
+  const board = await leaderboard.get();
+  const tag = (solver) => ({ ...solver, team: team.get(solver.login.toLowerCase()) || null });
+  return { ...board, solvers: board.solvers.map(tag), periods: Object.fromEntries(Object.entries(board.periods || {}).map(([name, period]) => [name, { ...period, solvers: period.solvers.map(tag) }])) };
+}
 const rosterFile = new URL(`../${process.env.BOARD_ROSTER_FILE || "board-solvers.json"}`, import.meta.url);
 let roster = null;
 try {
@@ -82,11 +90,9 @@ if (authMode === "github") {
       return new Map(result.rows.map((row) => [row.github_id, row.amount]));
     };
     getAward = async (githubId) => {
-      const result = await pool.query("SELECT award_id AS \"awardId\", award_type AS type, award_label AS label, award_amount::float8 AS amount FROM yukon_reward_awards WHERE github_id=$1 AND finalized=true ORDER BY created_at,award_id LIMIT 1", [githubId]);
-      if (result.rows[0]) return result.rows[0];
-      const board = await leaderboard.get();
-      const decorated = { ...board, periods: Object.fromEntries(Object.entries(board.periods || {}).map(([name, period]) => [name, { ...period, solvers: period.solvers.map((solver) => ({ ...solver, team: team.get(solver.login.toLowerCase()) || null })) }])) };
-      return awardsFromStandings(decorated).get(String(githubId)) || null;
+      const result = await pool.query("SELECT award_id AS \"awardId\", award_type AS type, award_label AS label, award_amount::float8 AS amount FROM yukon_reward_awards WHERE github_id=$1 AND finalized=true ORDER BY created_at,award_id", [githubId]);
+      if (result.rows.length) return combineAwards(result.rows);
+      return awardsFromStandings(await decoratedBoard()).get(String(githubId)) || null;
     };
   }
 
@@ -138,7 +144,9 @@ const server = createServer(async (req, res) => {
     }
     if (url.pathname === "/claim/api/qsb/leaderboard") {
       try {
-        const [board, awarded] = await Promise.all([leaderboard.get(), prizes()]);
+        const [board, awarded] = await Promise.all([decoratedBoard(), prizes()]);
+        const automatic = awardsFromStandings(board);
+        const raffle = raffleFromStandings(board);
         const decorate = (solver, index) => ({
           rank: index + 1,
           login: solver.login,
@@ -146,12 +154,14 @@ const server = createServer(async (req, res) => {
           gains: solver.gains,
           total: solver.total,
           promotions: solver.promotions,
-          team: team.get(solver.login.toLowerCase()) || null,
-          prize: team.has(solver.login.toLowerCase()) ? null : solver.avatarId ? awarded.get(solver.avatarId) ?? null : null,
+          team: solver.team,
+          prize: solver.team || !solver.avatarId ? null : awarded.get(solver.avatarId) ?? automatic.get(String(solver.avatarId))?.amount ?? null,
+          raffle: !solver.team && solver.avatarId && raffle.qualifiers.some((q) => q.avatarId === String(solver.avatarId)) ? raffle.share : null,
         });
         const periods = Object.fromEntries(Object.entries(board.periods || {}).map(([name, period]) => [name, { workloads: period.workloads, range: period.range, solvers: period.solvers.map(decorate) }]));
+        const { qualifiers, ...raffleSummary } = raffle;
         res.writeHead(200, { "Content-Type": "application/json", "Cache-Control": "no-store" });
-        return res.end(JSON.stringify({ updatedAt: board.fetchedAt, stale: board.stale, week1End: board.week1End, workloads: board.workloads, periods, solvers: board.solvers.map(decorate) }));
+        return res.end(JSON.stringify({ updatedAt: board.fetchedAt, stale: board.stale, week1End: board.week1End, workloads: board.workloads, raffle: raffleSummary, periods, solvers: board.solvers.map(decorate) }));
       } catch {
         res.writeHead(503, { "Content-Type": "application/json", "Cache-Control": "no-store" });
         return res.end(JSON.stringify({ error: "The leaderboard is unavailable right now." }));

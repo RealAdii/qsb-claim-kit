@@ -2,10 +2,11 @@ import { mountAccount } from "./claim.js?v=2";
 
 const safe = (value) => String(value ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 const avatarUrl = (id, size) => `https://avatars.githubusercontent.com/u/${encodeURIComponent(id)}?v=4&s=${size}`;
-const money = (amount) => `$${Number(amount).toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
+const money = (amount) => `$${Number(amount).toLocaleString("en-US", { minimumFractionDigits: Number.isInteger(Number(amount)) ? 0 : 2, maximumFractionDigits: 2 })}`;
 const pct = (value) => `${Number(value).toFixed(2)}%`;
 const winners = document.querySelector("#yr-winners");
 const rest = document.querySelector("#yr-rest");
+const raffle = document.querySelector("#yr-raffle");
 const note = document.querySelector("#yr-board-note");
 
 await mountAccount();
@@ -38,7 +39,7 @@ function winnerCell(solver, index) {
     <div class="yr-winner-body">
       <p class="yr-winner-title">${index === 0 ? crown : ""}${safe(solver.title || titles[index] || "")}</p>
       <p class="yr-winner-name">${safe(solver.login)}${solver.team ? teamTag(solver.team) : ""}</p>
-      <p class="yr-winner-meta">${solver.prize ? money(solver.prize) : "To be announced"} <span>·</span> ${pct(solver.total)} gain</p>
+      <p class="yr-winner-meta">${solver.placePrize ? money(solver.placePrize) : "To be announced"}${solver.raffle ? ` <span>+</span> ${money(solver.raffle)} raffle` : ""} <span>·</span> ${pct(solver.total)} gain</p>
     </div>
   </article>`;
 }
@@ -48,7 +49,7 @@ function row(solver, index) {
   return `<li class="yr-row${index === 0 && !solver.team ? " is-lead" : ""}">
     <span class="yr-row-rank">${String(solver.rank).padStart(2, "0")}</span>
     ${solver.avatarId ? `<img class="yr-row-avatar" src="${avatarUrl(solver.avatarId, 64)}" alt="" width="32" height="32" loading="lazy">` : `<span class="yr-row-avatar"></span>`}
-    <span class="yr-row-name">${safe(solver.login)}${place}${solver.team ? teamTag(solver.team) : ""}</span>
+    <span class="yr-row-name">${safe(solver.login)}${place}${solver.raffle ? '<span class="yr-place yr-raffle-tag">Raffle</span>' : ""}${solver.team ? teamTag(solver.team) : ""}</span>
     <span class="yr-row-gain">${breakdown(solver)}<small>total gain</small></span>
     <span class="yr-row-prize">${solver.team ? "<span>Not eligible</span>" : solver.prize ? money(solver.prize) : "<span>&mdash;</span>"}</span>
   </li>`;
@@ -67,6 +68,30 @@ const PERIODS = [
   { key: "weeks23", label: "Weeks 2 and 3", pool: "$18,000", prizes: [6000, 3600, 2400] },
 ];
 const PLACES = ["1st", "2nd", "3rd"];
+const closedLabel = (period) => period?.range?.until && Date.parse(period.range.until) <= Date.now() ? "Closed" : "Still running";
+
+function raffleCell(solver, share) {
+  return `<article class="yr-winner-cell yr-raffle-cell">
+    ${solver.avatarId ? `<img class="yr-winner-avatar" src="${avatarUrl(solver.avatarId, 96)}" alt="" width="46" height="46" loading="lazy">` : `<span class="yr-winner-avatar"></span>`}
+    <div class="yr-winner-body">
+      <p class="yr-winner-name">${safe(solver.login)}</p>
+      <p class="yr-winner-meta">${money(share)} <span>·</span> ${pct(solver.total)} gain</p>
+    </div>
+  </article>`;
+}
+
+function renderRaffle(board) {
+  const info = board.raffle;
+  const all = board.periods?.all?.solvers || board.solvers || [];
+  const qualifiers = all.filter((solver) => solver.raffle);
+  if (!info || !info.open || !qualifiers.length) {
+    raffle.innerHTML = `<header class="yr-winners-head"><h2>Raffle winners</h2><p class="yr-winners-range">${money(info?.pool ?? 6000)} · shared once the challenge closes</p></header>
+      <p class="yr-winners-empty">Every solver who improves the frontier by at least ${info?.threshold ?? 3} percent over the whole challenge gets an equal share.</p>`;
+    return;
+  }
+  raffle.innerHTML = `<header class="yr-winners-head"><h2>Raffle winners</h2><p class="yr-winners-range">${money(info.pool)} shared equally by ${info.count} solvers at ${info.threshold} percent or more · ${money(info.share)} each</p></header>
+    <div class="yr-raffle-grid">${qualifiers.map((solver) => raffleCell(solver, info.share)).join("")}</div>`;
+}
 
 function render(board, active) {
   const period = board.periods?.[active] || { solvers: board.solvers, workloads: board.workloads };
@@ -77,15 +102,16 @@ function render(board, active) {
   const solvers = period.solvers.map((solver) => {
     if (solver.team) return solver;
     const index = place++;
-    return index < 3 ? { ...solver, place: index, prize: solver.prize ?? prizes[index] } : solver;
+    // The cell shows the place prize on its own; the standings column adds the raffle share.
+    return index < 3 ? { ...solver, place: index, placePrize: prizes[index], prize: solver.prize ?? prizes[index] } : solver;
   });
   const eligible = solvers.filter((solver) => !solver.team);
   const top = eligible.slice(0, 3);
   const tabs = PERIODS.map(({ key, label, pool }) =>
-    `<button type="button" class="yr-period-tab${key === active ? " is-active" : ""}" data-period="${key}" aria-pressed="${key === active}">${label}<span>${pool}</span><small>${range(board.periods?.[key])}${key === "week1" ? " · Past" : " · Current"}</small></button>`).join("");
+    `<button type="button" class="yr-period-tab${key === active ? " is-active" : ""}" data-period="${key}" aria-pressed="${key === active}">${label}<span>${pool}</span><small>${range(board.periods?.[key])}</small></button>`).join("");
   const heading = PERIODS.find((p) => p.key === active).label;
   winners.innerHTML = `<div class="yr-period-tabs" role="group" aria-label="Reward period">${tabs}</div>
-    <header class="yr-winners-head"><h2>${heading} winners</h2><p class="yr-winners-range">${range(period)}${range(period) ? " · " : ""}${active === "week1" ? "Closed" : "Still running"}</p></header>
+    <header class="yr-winners-head"><h2>${heading} winners</h2><p class="yr-winners-range">${range(period)}${range(period) ? " · " : ""}${closedLabel(period)}</p></header>
     ${top.length ? `<div class="yr-winners-grid">${top.map(winnerCell).join("")}</div>`
       : `<p class="yr-winners-empty">No promoted submissions in this period yet. Winners appear here as solvers push the record.</p>`}`;
   rest.innerHTML = solvers.length
@@ -95,9 +121,10 @@ function render(board, active) {
     tab.onclick = () => render(board, tab.dataset.period);
   }
   const when = board.updatedAt ? new Date(board.updatedAt).toLocaleTimeString() : "";
+  // Rewards include the raffle share for solvers who qualified for it.
   const pinning = period.workloads?.pinning?.improvement;
   const subset = period.workloads?.subset?.improvement;
-  note.textContent = `Total gain is every promoted submission a solver landed in this period, measured against the baseline the period started from and added across both workloads. Pinning has moved ${pinning ? pct(pinning) : "?"} and subset ${subset ? pct(subset) : "?"}. Weeks 2 and 3 start again from wherever the frontier stood when Week 1 closed. Standings as of ${when}${board.stale ? ", from the last good copy" : ""}.`;
+  note.textContent = `Reward adds a solver's place prize and raffle share together. Total gain is every promoted submission a solver landed in this period, measured against the baseline the period started from and added across both workloads. Pinning has moved ${pinning ? pct(pinning) : "?"} and subset ${subset ? pct(subset) : "?"}. Weeks 2 and 3 start again from wherever the frontier stood when Week 1 closed. Standings as of ${when}${board.stale ? ", from the last good copy" : ""}.`;
 }
 
 try {
@@ -105,6 +132,7 @@ try {
   if (!response.ok) throw new Error("unavailable");
   const board = await response.json();
   render(board, "weeks23");
+  renderRaffle(board);
 } catch {
   note.textContent = "The leaderboard is unavailable right now. Please refresh to try again.";
 }
