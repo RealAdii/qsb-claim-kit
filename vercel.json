@@ -60,44 +60,8 @@
   ],
   "headers": [
     {
-      "source": "/claim/media/invoice-template.docx",
-      "headers": [
-        {
-          "key": "Content-Disposition",
-          "value": "attachment; filename=\"QSB-reward-invoice-template.docx\""
-        }
-      ]
-    },
-    {
-      "source": "/media/invoice-template.docx",
-      "headers": [
-        {
-          "key": "Content-Disposition",
-          "value": "attachment; filename=\"QSB-reward-invoice-template.docx\""
-        }
-      ]
-    },
-    {
       "source": "/(.*)",
       "headers": [
-    {
-      "source": "/claim/media/invoice-template.docx",
-      "headers": [
-        {
-          "key": "Content-Disposition",
-          "value": "attachment; filename=\"QSB-reward-invoice-template.docx\""
-        }
-      ]
-    },
-    {
-      "source": "/media/invoice-template.docx",
-      "headers": [
-        {
-          "key": "Content-Disposition",
-          "value": "attachment; filename=\"QSB-reward-invoice-template.docx\""
-        }
-      ]
-    },
         {
           "key": "X-Content-Type-Options",
           "value": "nosniff"
@@ -105,6 +69,24 @@
         {
           "key": "Content-Security-Policy",
           "value": "default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self' https://avatars.githubusercontent.com; frame-ancestors 'none'; form-action 'self'"
+        }
+      ]
+    },
+    {
+      "source": "/claim/media/invoice-template.docx",
+      "headers": [
+        {
+          "key": "Content-Disposition",
+          "value": "attachment; filename=\"QSB-reward-invoice-template.docx\""
+        }
+      ]
+    },
+    {
+      "source": "/media/invoice-template.docx",
+      "headers": [
+        {
+          "key": "Content-Disposition",
+          "value": "attachment; filename=\"QSB-reward-invoice-template.docx\""
         }
       ]
     }
