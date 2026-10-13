@@ -51,7 +51,7 @@ export function startCountdown(node) {
   tick();
 }
 
-const money = (amount) => `$${Number(amount).toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
+const money = (amount) => `$${Number(amount).toLocaleString("en-US", { minimumFractionDigits: Number.isInteger(Number(amount)) ? 0 : 2, maximumFractionDigits: 2 })}`;
 // Collectible winner card: foil edge, halftone portrait, nameplate. Every
 // winner reads "WINNER" regardless of which award they hold.
 const winnerCard = (user) => `<div class="yr-card" id="yr-card"><div class="yr-card-foil"><div class="yr-card-face">

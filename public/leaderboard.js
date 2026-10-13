@@ -1,4 +1,4 @@
-import { mountAccount } from "./claim.js?v=2";
+import { mountAccount } from "./claim.js?v=3";
 
 const safe = (value) => String(value ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 const avatarUrl = (id, size) => `https://avatars.githubusercontent.com/u/${encodeURIComponent(id)}?v=4&s=${size}`;
@@ -90,6 +90,7 @@ function renderRaffle(board) {
     return;
   }
   raffle.innerHTML = `<header class="yr-winners-head"><h2>Raffle winners</h2><p class="yr-winners-range">${money(info.pool)} shared equally by ${info.count} solvers at ${info.threshold} percent or more · ${money(info.share)} each</p></header>
+    <div class="yr-raffle-cta"><p><b>On this list?</b> Your ${money(info.share)} share is ready to claim. Connect the GitHub account you used on the challenge and leave your email and Telegram.</p><a class="yr-raffle-claim" href="/claim/auth/github">Claim your raffle share</a></div>
     <div class="yr-raffle-grid">${qualifiers.map((solver) => raffleCell(solver, info.share)).join("")}</div>`;
 }
 

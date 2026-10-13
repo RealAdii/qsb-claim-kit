@@ -1,4 +1,4 @@
-import { mountClaim } from "./claim.js?v=2";
+import { mountClaim } from "./claim.js?v=3";
 
 // Local-only GitHub and submission simulation. No form data is stored or sent.
 const scenario = new URLSearchParams(location.search).get("state") || "winner";
