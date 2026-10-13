@@ -14,7 +14,7 @@ for await (const chunk of server.stdout) {
 }
 test.after(async () => { server.kill(); await once(server, "exit"); });
 
-const pageRoutes = ["/", "/claim", "/claim/winners", "/claim/leaderboard"];
+const pageRoutes = ["/", "/claim", "/claim/winners", "/claim/leaderboard", "/claim/invoice"];
 for (const route of pageRoutes) {
   test(`assets referenced by ${route} all resolve`, async () => {
     const page = await fetch(new URL(route, base));
