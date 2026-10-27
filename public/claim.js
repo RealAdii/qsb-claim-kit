@@ -163,6 +163,9 @@ export async function mountClaim({ entry, client = httpClient(), headerSlot = do
     const mark = state?.user?.id ? `<img class="yr-avatar" src="${avatar(state.user.id)}" alt="" width="68" height="68">` : `<span class="yr-state-icon" aria-hidden="true">✓</span>`;
     entry.innerHTML = `<div class="yr-state" role="status">${mark}<div><h2>Details received</h2><p>The team will be in touch with you soon about the next steps on receiving the reward.</p><p class="yr-help">Questions in the meantime? Ask in the <a href="https://t.me/+ZYLaSGIEYgE5ODQ9" target="_blank" rel="noreferrer">Telegram group</a> or on <a href="https://yukonresearch.slack.com/join/shared_invite/zt-4667dhade-vm6H9hWQwSGxv8WnXYUlpQ" target="_blank" rel="noreferrer">Slack</a>.</p>${who}</div></div>`;
   }
+  function renderClosed() {
+    entry.innerHTML = `<div class="yr-state" role="status"><span class="yr-state-icon" aria-hidden="true">!</span><div><h2>Reward claims are closed</h2><p>The submission deadline was November 3, 2026 at 11:59 PM UTC. If you submitted before the deadline, the team has your details.</p><p class="yr-help">Questions? Ask in the <a href="https://t.me/+ZYLaSGIEYgE5ODQ9" target="_blank" rel="noreferrer">Telegram group</a> or on <a href="https://yukonresearch.slack.com/join/shared_invite/zt-4667dhade-vm6H9hWQwSGxv8WnXYUlpQ" target="_blank" rel="noreferrer">Slack</a>.</p></div></div>`;
+  }
   function wireCardTilt() {
     const card = entry.querySelector("#yr-card");
     if (!card || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
@@ -219,6 +222,7 @@ export async function mountClaim({ entry, client = httpClient(), headerSlot = do
     if (!state?.user) return renderConnect();
     if (!state.eligible) return renderLoser();
     if (state.claimed) return renderReceived();
+    if (state.claimsClosed) return renderClosed();
     renderForm();
     if (celebrate) { confetti(); revealClaim(); }
   }

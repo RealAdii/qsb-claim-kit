@@ -2,7 +2,7 @@
 // process: sessions, awards and claims all live in PostgreSQL.
 import pg from "pg";
 import { createGithubAuth, postgresAuthStore } from "../server/github-auth.mjs";
-import { createClaimHandler } from "../server/claim-handler.mjs";
+import { CLAIM_DEADLINE, createClaimHandler } from "../server/claim-handler.mjs";
 import { postgresStore } from "../server/store.mjs";
 import { loadStandings } from "../server/leaderboard.mjs";
 import { createSnapshotBoard } from "../server/snapshots.mjs";
@@ -28,6 +28,7 @@ const githubAuth = createGithubAuth({
 });
 const claimHandler = createClaimHandler({
   origin, getSession: githubAuth.getSession,
+  claimDeadline: process.env.CLAIM_DEADLINE || CLAIM_DEADLINE,
   getAward: async (githubId) => {
     const result = await pool.query('SELECT award_id AS "awardId", award_type AS type, award_label AS label, award_amount::float8 AS amount FROM yukon_reward_awards WHERE github_id=$1 AND finalized=true ORDER BY created_at,award_id', [githubId]);
     if (result.rows.length) return combineAwards(result.rows);

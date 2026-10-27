@@ -54,6 +54,13 @@ test("the other states render without throwing", async () => {
   }
 });
 
+test("an unclaimed winner sees the closed state after the deadline", async () => {
+  const entry = element();
+  await mountClaim({ entry, headerSlot: element(), client: client({ user, eligible: true, claimed: false, claimsClosed: true, award: { amount: 2500 } }) });
+  assert.ok(entry.html.includes("Reward claims are closed"));
+  assert.equal(entry.html.includes('id="yr-form"'), false);
+});
+
 test("the shipped client talks to the /claim endpoints", async () => {
   const { httpClient } = await import("../public/claim.js");
   const calls = [];

@@ -4,9 +4,9 @@ import { createClaimHandler, validate } from "../server/claim-handler.mjs";
 import { seal, unseal } from "../server/crypto.mjs";
 const valid = { email: "solver@example.com", telegram: "@solver_name", detailsConfirmed: true };
 const award = { awardId: "weeks23-second", type: "weeks23", label: "Weeks 2 to 3 · 2nd place", amount: 3600 };
-function setup({ session = { githubId: 42, login: "solver" }, winningAward = award } = {}) {
+function setup({ session = { githubId: 42, login: "solver" }, winningAward = award, now = Date.parse("2026-11-03T12:00:00Z") } = {}) {
   const records = new Map();
-  const handler = createClaimHandler({ origin: "https://qsb.example", getSession: async () => session, getAward: async () => winningAward, store: { exists: async (id, awardId) => records.has(`${id}:${awardId}`), save: async (id, awardId, value) => records.set(`${id}:${awardId}`, value) } });
+  const handler = createClaimHandler({ origin: "https://qsb.example", getSession: async () => session, getAward: async () => winningAward, store: { exists: async (id, awardId) => records.has(`${id}:${awardId}`), save: async (id, awardId, value) => records.set(`${id}:${awardId}`, value) }, now: () => now });
   return { handler, records };
 }
 const request = (body = valid, origin = "https://qsb.example") => new Request("https://qsb.example/api/yukon/reward-claim", { method: "POST", headers: { origin, "content-type": "application/json" }, body: JSON.stringify(body) });
@@ -27,11 +27,24 @@ test("claim status gives the winner their own award and no contact details", asy
   const status = await response.json();
   assert.equal(status.eligible, true);
   assert.equal(status.claimed, true);
+  assert.equal(status.claimsClosed, false);
   assert.deepEqual(status.award, { amount: 3600 });
   assert.equal(JSON.stringify(status).includes("weeks23"), false);
   assert.equal(JSON.stringify(status).includes("2nd place"), false);
   assert.equal(JSON.stringify(status).includes("solver@example.com"), false);
   assert.equal(JSON.stringify(status).includes("@solver_name"), false);
+});
+test("the deadline closes new claims but preserves existing claim status", async () => {
+  const afterDeadline = Date.parse("2026-11-04T00:00:00Z");
+  const { handler, records } = setup({ now: afterDeadline });
+  const response = await handler(request());
+  assert.equal(response.status, 410);
+  assert.equal(records.size, 0);
+  assert.deepEqual(await response.json(), { error: "Reward claims closed on November 3, 2026 at 11:59 PM UTC.", claimsClosed: true, claimDeadline: "2026-11-04T00:00:00.000Z" });
+  records.set("42:weeks23-second", valid);
+  const status = await (await handler(new Request("https://qsb.example/api/yukon/reward-claim"))).json();
+  assert.equal(status.claimed, true);
+  assert.equal(status.claimsClosed, true);
 });
 test("award details stay hidden from anyone without a finalized award", async () => {
   for (const options of [{ session: null }, { winningAward: null }]) {

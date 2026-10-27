@@ -4,6 +4,8 @@ class ClientError extends Error {
 const limits = { email: 254, telegram: 64 };
 const fieldNames = { email: "email address", telegram: "Telegram username" };
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+export const CLAIM_DEADLINE = "2026-11-04T00:00:00.000Z";
+const deadlineMessage = "Reward claims closed on November 3, 2026 at 11:59 PM UTC.";
 export function validate(body) {
   if (!body || typeof body !== "object" || Array.isArray(body)) throw new ClientError(400, "Invalid form.");
   const fields = {};
@@ -29,9 +31,11 @@ const json = (status, value) => new Response(JSON.stringify(value), { status, he
 
 // getAward must query the canonical Yukon award list by verified GitHub ID.
 // Return { awardId, type, label, amount } only for a finalized winner.
-export function createClaimHandler({ origin, getSession, getAward, store }) {
+export function createClaimHandler({ origin, getSession, getAward, store, claimDeadline = CLAIM_DEADLINE, now = () => Date.now() }) {
   if (!origin || !getSession || !getAward || !store) throw new Error("Production adapters are required.");
   const expectedOrigin = new URL(origin).origin;
+  const deadline = Date.parse(claimDeadline);
+  if (Number.isNaN(deadline)) throw new Error("A valid claim deadline is required.");
   return async (request) => {
     try {
       if (!["GET", "POST"].includes(request.method)) return json(405, { error: "Method not allowed." });
@@ -46,7 +50,9 @@ export function createClaimHandler({ origin, getSession, getAward, store }) {
       const award = await getAward(githubId);
       if (!award) return request.method === "GET" ? json(200, { user: { id: githubId, login: session.login }, eligible: false, claimed: false }) : json(403, { error: "This GitHub account does not have a Yukon QSB award to claim." });
       if (!/^[a-zA-Z0-9_-]{1,80}$/.test(String(award.awardId)) || typeof award.label !== "string" || !Number.isFinite(Number(award.amount)) || Number(award.amount) <= 0) throw new Error("Invalid award adapter result");
-      if (request.method === "GET") return json(200, { user: { id: githubId, login: session.login }, eligible: true, claimed: await store.exists(githubId, award.awardId), award: { amount: Number(award.amount) } });
+      const claimsClosed = now() >= deadline;
+      if (request.method === "GET") return json(200, { user: { id: githubId, login: session.login }, eligible: true, claimed: await store.exists(githubId, award.awardId), claimsClosed, claimDeadline, award: { amount: Number(award.amount) } });
+      if (claimsClosed) return json(410, { error: deadlineMessage, claimsClosed: true, claimDeadline });
       const details = validate(await readBody(request));
       await store.save(githubId, award.awardId, { ...details, githubId, githubLogin: session.login, awardId: award.awardId, awardType: award.type, awardLabel: award.label, awardAmount: Number(award.amount), updatedAt: new Date().toISOString() });
       return json(200, { ok: true });

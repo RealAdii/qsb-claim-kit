@@ -4,8 +4,7 @@
 // today's behaviour rather than to stale data.
 export const SNAPSHOT_TOLERANCE_MS = 45 * 60 * 1000;
 
-export async function saveSnapshot(pool, standings) {
-  const fetchedAt = new Date();
+export async function saveSnapshot(pool, standings, fetchedAt = new Date()) {
   await pool.query("INSERT INTO qsb_leaderboard_snapshots (payload, fetched_at) VALUES ($1, $2)", [JSON.stringify(standings), fetchedAt]);
   // Keep a short history for debugging, never an unbounded table.
   await pool.query("DELETE FROM qsb_leaderboard_snapshots WHERE id NOT IN (SELECT id FROM qsb_leaderboard_snapshots ORDER BY fetched_at DESC LIMIT 48)");
@@ -26,7 +25,7 @@ export function createSnapshotBoard({ pool, compute, toleranceMs = SNAPSHOT_TOLE
   let inflight = null;
   async function refresh() {
     const standings = await compute();
-    const fetchedAt = await saveSnapshot(pool, standings);
+    const fetchedAt = await saveSnapshot(pool, standings, new Date(now()));
     return { ...standings, fetchedAt, stale: false, source: "live" };
   }
   return {
