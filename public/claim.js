@@ -27,7 +27,7 @@ export function httpClient(endpoint = "/claim/api/yukon/reward-claim", loginUrl 
   return { status: () => request("GET"), save: (data) => request("POST", data), connect: () => { window.location.assign(loginUrl); }, signOut, logout };
 }
 
-// Counts down to the close of the challenge, ticking every second so the time
+// Counts down to the reward claim deadline, ticking every second so the time
 // pressure is visible rather than implied.
 export function startCountdown(node) {
   if (!node?.dataset?.deadline) return;
@@ -37,14 +37,14 @@ export function startCountdown(node) {
   const tick = () => {
     const left = deadline - Date.now();
     if (left <= 0) {
-      node.innerHTML = `<span class="yr-count-done">The challenge has closed</span>`;
+      node.innerHTML = `<span class="yr-count-done">Reward claims are closed</span>`;
       return;
     }
     const days = Math.floor(left / 864e5);
     const hours = Math.floor((left % 864e5) / 36e5);
     const minutes = Math.floor((left % 36e5) / 6e4);
     const seconds = Math.floor((left % 6e4) / 1000);
-    node.innerHTML = `<span class="yr-count-label">Challenge ends in</span>
+    node.innerHTML = `<span class="yr-count-label">Claims close in</span>
       <span class="yr-count-units">${unit(days, "days")}${unit(hours, "hrs")}${unit(minutes, "min")}${unit(seconds, "sec")}</span>`;
     setTimeout(tick, 1000 - (Date.now() % 1000));
   };

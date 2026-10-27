@@ -161,6 +161,8 @@ html{scroll-behavior:smooth}
 .yr-period:hover{background:#ffffff24;border-color:#ffffff6b;transform:translateY(-1px)}
 .yr-period:active{transform:none}
 
+.yr-claim-deadline{display:grid;gap:5px;max-width:46em;margin-top:22px;padding:14px 18px;border:1px solid #f3c78a70;border-radius:12px;background:#0d0805bf;backdrop-filter:blur(8px);box-shadow:0 18px 40px -26px #000}.yr-claim-deadline strong{color:var(--record);font-size:15px;letter-spacing:.01em}.yr-claim-deadline span{color:#f1f4f8;font-size:14px;line-height:1.5}
+
 .yr-row-prize span{color:var(--muted);font-size:12px;font-weight:500}
 
 /* Period toggle above the winners panel. */
@@ -179,7 +181,7 @@ html{scroll-behavior:smooth}
 .yr-period em{grid-column:1/-1;margin-top:4px;color:#cfd6df;font-size:11px;font-style:normal;letter-spacing:.02em}
 .yr-countdown{display:inline-flex;align-items:center;flex-wrap:wrap;gap:clamp(12px,2vw,22px);margin:22px 0 0;padding:14px clamp(16px,2vw,22px);border:1px solid #f3c78a3d;border-radius:14px;background:#0d0805a6;backdrop-filter:blur(8px);box-shadow:0 18px 40px -26px #000}.yr-count-label{color:#e7ecf3;font-size:10px;font-weight:750;letter-spacing:.18em;text-transform:uppercase;white-space:nowrap}.yr-count-units{display:flex;align-items:flex-start;gap:clamp(10px,1.6vw,18px)}.yr-count-unit{position:relative;display:grid;justify-items:center;gap:2px;min-width:2.6ch}.yr-count-unit+.yr-count-unit:before{content:":";position:absolute;left:clamp(-11px,-0.9vw,-7px);top:1px;color:#f3c78a52;font-size:clamp(20px,2vw,26px);font-weight:400;line-height:1}.yr-count-unit b{font-size:clamp(24px,2.6vw,34px);font-weight:600;line-height:1;letter-spacing:-.03em;color:var(--record);font-variant-numeric:tabular-nums}.yr-count-unit i{font-style:normal;font-size:9px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#b7ada1}.yr-count-done{color:var(--record);font-size:15px;font-weight:600;letter-spacing:.02em}
 
-@media(max-width:620px){.yr-countdown{gap:10px;padding:12px 14px}.yr-count-units{gap:12px}}
+@media(max-width:620px){.yr-claim-deadline{margin-top:17px;padding:12px 14px}.yr-countdown{gap:10px;padding:12px 14px}.yr-count-units{gap:12px}}
 
 /* Help menu in the header, native disclosure so it needs no script. */
 .yr-help-menu{position:relative}

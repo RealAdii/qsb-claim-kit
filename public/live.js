@@ -1,4 +1,4 @@
-import { mountClaim, httpClient, startCountdown } from "./claim.js?v=3";
+import { mountClaim, httpClient, startCountdown } from "./claim.js?v=4";
 
 startCountdown(document.querySelector("#yr-countdown"));
 
